@@ -1,14 +1,14 @@
-#ifndef CLICK_SIMPLEPULLELEMENT_HH
-#define CLICK_SIMPLEPULLELEMENT_HH
+#ifndef CLICK_IGMPGROUPMEMBER_HH
+#define CLICK_IGMPGROUPMEMBER_HH
 #include <click/element.hh>
 CLICK_DECLS
 
-class IGMPRouter : public Element {
+class IGMPGroupMember : public Element {
 public:
-    SimplePullElement();
-    ~SimplePullElement();
+    IGMPGroupMember();
+    ~IGMPGroupMember();
 
-    const char *class_name() const	{ return "IGMPRouter"; }
+    const char *class_name() const	{ return "IGMPGroupMember"; }
     const char *port_count() const	{ return "1/1"; }
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
