@@ -2,9 +2,7 @@
 #define IGMP_IGMPCHECKSUM_HH
 
 
-class IGMPChecksum {
 
-};
 
 
 #endif //IGMP_IGMPCHECKSUM_HH

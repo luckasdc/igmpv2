@@ -13,7 +13,7 @@ public:
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
 
-    Packet* pull(int);
+    Packet* push(int, Packet*);
 private:
     uint32_t maxSize;
 };

@@ -14,6 +14,8 @@ struct IPHeader {
 };
 
 struct IGMPMessage {
+    uint8_t type;
+    uin
 
 };
 
