@@ -14,7 +14,7 @@ struct IPHeader {
 };
 
 struct IGMPQueryMessage {
-    uint8_t type;
+    uint8_t 0x11;
     uint8_t max_resp_code;
     uint16_t checksum;
     IPAddress group_address;
