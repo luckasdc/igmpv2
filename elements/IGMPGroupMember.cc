@@ -23,19 +23,19 @@ void IGMPGroupMember::push(int, Packet *p){
     else output(0).push(p);
 }
 
-int IGMPGroupMember::change_state_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {
+int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {
     Vector<String> args;
-    String group;
+    IPAddress group;
     IGMPGroupMember* me = (IGMPGroupMember*) e;
     cp_argvec(s, args);
     if(Args(args, me, errh).read_p("GROUP", group).complete() < 0) return -1;
-    click_chatter("Entered group ip %s", group);
+    click_chatter("Entered group ip %s", group.unparse().c_str());
 
     return 0;
 }
 
 void IGMPGroupMember::add_handlers() {
-    add_write_handler("change_state", change_state_handler);
+    add_write_handler("join", join_group_handler);
 }
 
 CLICK_ENDDECLS

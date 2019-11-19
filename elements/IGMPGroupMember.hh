@@ -16,7 +16,7 @@ public:
     void push(int, Packet*);
 
     // Handlers
-    static int change_state_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
+    static int join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
     void add_handlers();
 
 private:
