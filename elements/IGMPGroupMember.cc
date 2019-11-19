@@ -24,11 +24,12 @@ void IGMPGroupMember::push(int, Packet *p){
 }
 
 int IGMPGroupMember::change_state_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {
-    IGMPGroupMember* me = (IGMPGroupMember*) e;
+    Vector<String> args;
     String group;
-    cp_argvec(conf, vconf);
-
-    if(Args(vconf, me, errh).read_mp().complete() < 0) return -1;
+    IGMPGroupMember* me = (IGMPGroupMember*) e;
+    cp_argvec(s, args);
+    if(Args(args, me, errh).read_p("GROUP", group).complete() < 0) return -1;
+    click_chatter("Entered group ip %s", group);
 
     return 0;
 }
