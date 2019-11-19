@@ -13,7 +13,12 @@ public:
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
 
-    Packet* push(int, Packet*);
+    void push(int, Packet*);
+
+    // Handlers
+    static int change_state_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
+    void add_handlers();
+
 private:
     uint32_t maxSize;
 };

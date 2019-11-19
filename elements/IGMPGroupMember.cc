@@ -23,5 +23,19 @@ void IGMPGroupMember::push(int, Packet *p){
     else output(0).push(p);
 }
 
+int IGMPGroupMember::change_state_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {
+    IGMPGroupMember* me = (IGMPGroupMember*) e;
+    String group;
+    cp_argvec(conf, vconf);
+
+    if(Args(vconf, me, errh).read_mp().complete() < 0) return -1;
+
+    return 0;
+}
+
+void IGMPGroupMember::add_handlers() {
+    add_write_handler("change_state", change_state_handler);
+}
+
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPGroupMember)
