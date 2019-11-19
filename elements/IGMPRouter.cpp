@@ -1,7 +1,7 @@
 #include <click/config.h>
 #include <click/args.hh>
 #include <click/error.hh>
-#include "IGMPRouter.h"
+#include "IGMPRouter.hh"
 
 
 CLICK_DECLS

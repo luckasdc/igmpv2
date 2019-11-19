@@ -1,7 +1,7 @@
 #include <click/config.h>
 #include <click/args.hh>
 #include <click/error.hh>
-#include "IGMPGroupMember.h"
+#include "IGMPGroupMember.hh"
 
 
 CLICK_DECLS
