@@ -13,8 +13,8 @@ struct IPHeader {
 
 };
 
-struct IGMPQueryMessage {
-    uint8_t 0x11;
+struct MembershipQuery {
+    uint8_t type =  17; // 0x11
     uint8_t max_resp_code;
     uint16_t checksum;
     IPAddress group_address;
@@ -23,26 +23,26 @@ struct IGMPQueryMessage {
     uint8_t qrv : 3;
     uint8_t qqic;
     uint8_t n_sources;
-    std::vector<IPAddress> source_addresses;
+    Vector<IPAddress> source_addresses;
 };
 
-struct group_record {
+struct GroupRecord {
     uint8_t record_type;
     uint8_t aux_data_len;
     uint16_t n_sources;
-    IPAddress multicast_address
-    std::vector<IPAddress> source_addresses;
+    IPAddress multicast_address;
+    Vector<IPAddress> source_addresses;
 };
 
-struct report_query {
-    uint8_t type = 0x22;
-    uint8_t reserved;
+struct MembershipReport {
+    uint8_t type = 34; // 0x22
+    uint8_t reserved_1;
     uint16_t checksum;
-    uint16_t reserved;
+    uint16_t reserved_2;
     uint16_t n_group_records;
-    Vector<group_record> group_records;
+    Vector<GroupRecord> group_records;
 
-    inline unsigned int size() { return 8 + (this->n_group_records * sizeof(group_record)) }
+    //inline unsigned int size() { return 8 + (this->n_group_records * sizeof(group_record)) }
 };
 
 
