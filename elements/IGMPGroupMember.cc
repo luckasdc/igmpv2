@@ -1,7 +1,12 @@
 #include <click/config.h>
 #include <click/args.hh>
 #include <click/error.hh>
+#include <clicknet/ether.h>
+#include <clicknet/ip.h>
+#include <clicknet/udp.h>
 #include "IGMPGroupMember.hh"
+#include "IGMPMessage.hh"
+
 
 
 CLICK_DECLS
@@ -26,10 +31,14 @@ void IGMPGroupMember::push(int, Packet *p){
 int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {
     Vector<String> args;
     IPAddress group;
-    IGMPGroupMember* me = (IGMPGroupMember*) e;
+    IGMPGroupMember* self = (IGMPGroupMember*) e;
     cp_argvec(s, args);
-    if(Args(args, me, errh).read_p("GROUP", group).complete() < 0) return -1;
+    if(Args(args, self, errh).read_mp("GROUP", group).complete() < 0) return -1;
     click_chatter("Entered group ip %s", group.unparse().c_str());
+
+    // Generate Membership report (Sent while joining or when responding to membership query)
+    Packet* packet = self->generate_report(group);
+    self->output(0).push(packet);
 
     return 0;
 }
@@ -38,6 +47,36 @@ void IGMPGroupMember::add_handlers() {
     add_write_handler("join", join_group_handler);
 }
 
+Packet* IGMPGroupMember::generate_report(IPAddress group_address) {
+
+    // View example in clickfaq.pdf
+    int tailroom = 0;
+    int packetsize = sizeof(struct MembershipReport) + sizeof(struct GroupRecord); // TODO: 1 is for join report, hardcode
+    int headroom = sizeof(click_ether) + sizeof(click_ip);
+    WritablePacket* packet = Packet::make(headroom, 0, packetsize, tailroom);
+    click_chatter("Size of packet generated: %d", packetsize);
+    click_chatter("Size of click_ether: %d, click_ip: %d", sizeof(click_ether), sizeof(click_ip));
+
+
+    if (packet == 0 ) {
+        click_chatter("Cannot generate packet!");
+        return packet;
+    }
+    memset(packet->data(), 0, packet->length()); //
+
+    MembershipReport* report = (MembershipReport*)(packet->data());
+    report->type = 0x22;
+    report->n_group_records = htons(1); // TODO HARDCODE
+
+    GroupRecord* group = (GroupRecord*)(packet->data() + sizeof(report));
+    group->record_type = 4;
+    group->multicast_address = group_address;
+
+    report->checksum = click_in_cksum(packet->data(), packet->length());
+
+    return packet;
+
+}
 
 CLICK_ENDDECLS
 EXPORT_ELEMENT(IGMPGroupMember)

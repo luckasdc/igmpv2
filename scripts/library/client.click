@@ -9,19 +9,25 @@ elementclass Client {
 	ip :: Strip(14)
 		-> CheckIPHeader()
 		-> rt :: StaticIPLookup(
+					224.0.0.0/4 2, // Multicast
 					$address:ip/32 0,
 					$address:ipnet 0,
 					0.0.0.0/0.0.0.0 $gateway 1)
+
 		-> [1]output;
 
 
 	// Here comes our part
 
-    	igmp :: IGMPGroupMember(MAXPACKETSIZE 20)
+	rt[2] // IGMP reports arrive here
+        -> Discard
 
-    	rt[2]
-    	    -> igmp
-    	    -> output
+    igmp::IGMPGroupMember(MAXPACKETSIZE 20)
+        -> Print()
+        -> IPEncap(2, $address, 224.0.0.22, TTL 1)
+        -> CheckIPHeader()
+        -> arpq :: ARPQuerier($address)
+        -> output
 
 
     ///
@@ -32,7 +38,7 @@ elementclass Client {
 		-> FixIPSrc($address)
 		-> ttl :: DecIPTTL
 		-> frag :: IPFragmenter(1500)
-		-> arpq :: ARPQuerier($address)
+		-> arpq
 		-> output;
 
 	ipgw[1] -> ICMPError($address, parameterproblem) -> output;

@@ -28,19 +28,19 @@ struct MembershipQuery {
 
 struct GroupRecord {
     uint8_t record_type;
-    uint8_t aux_data_len;
-    uint16_t n_sources;
+    uint8_t aux_data_len = 0;
+    uint16_t n_sources = 0;
     IPAddress multicast_address;
-    Vector<IPAddress> source_addresses;
+    //Vector<IPAddress> source_addresses;
 };
 
 struct MembershipReport {
-    uint8_t type = 34; // 0x22
-    uint8_t reserved_1;
+    uint8_t type = 0x22; // 0x22
+    uint8_t reserved_1 = 0;
     uint16_t checksum;
-    uint16_t reserved_2;
+    uint16_t reserved_2 = 0;
     uint16_t n_group_records;
-    Vector<GroupRecord> group_records;
+    //Vector<GroupRecord> group_records;
 
     //inline unsigned int size() { return 8 + (this->n_group_records * sizeof(group_record)) }
 };
