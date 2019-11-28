@@ -36,7 +36,10 @@ struct GroupRecord {
     // Vector<IPAddress> source_addresses;
 };
 
-struct GroupRecordVector {};
+struct GroupRecordExtended {
+    GroupRecord header;
+    Vector <IPAddress> source_addresses;
+};
 
 
 struct MembershipReport {
@@ -50,5 +53,18 @@ struct MembershipReport {
 //    inline unsigned int size() { return 8 + (this->n_group_records * sizeof(group_record)) }
 };
 
+struct MembershipReportExtended {
+    MembershipReport header;
+    Vector <GroupRecordExtended> group_records;
+
+    static MembershipReportExtended parse(Packet* p);
+};
+
+
+MembershipReportExtended MembershipReportExtended::parse(Packet* p) {
+    MembershipReportExtended output;
+
+    return output;
+}
 
 #endif //IGMP_IGMPMESSAGE_HH
