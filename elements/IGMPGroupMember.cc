@@ -37,17 +37,32 @@ int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk
     click_chatter("Entered group ip %s", group.unparse().c_str());
 
     // Generate Membership report (Sent while joining or when responding to membership query)
-    Packet* packet = self->generate_report(group);
+    Packet* packet = self->generate_report(group, IN_TO_EX);
     self->output(0).push(packet);
+    return 0;
+}
 
+int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {
+    Vector<String> args;
+    IPAddress group;
+    IGMPGroupMember* self = (IGMPGroupMember*) e;
+    cp_argvec(s, args);
+    if(Args(args, self, errh).read_mp("GROUP", group).complete() < 0) return -1;
+    click_chatter("Leave group ip %s", group.unparse().c_str());
+
+    // Generate Membership report (Sent while joining or when responding to membership query)
+    Packet* packet = self->generate_report(group, EX_TO_IN);
+    self->output(0).push(packet);
     return 0;
 }
 
 void IGMPGroupMember::add_handlers() {
     add_write_handler("join", join_group_handler);
+    add_write_handler("leave", leave_group_handler);
+
 }
 
-Packet* IGMPGroupMember::generate_report(IPAddress group_address) {
+Packet* IGMPGroupMember::generate_report(IPAddress group_address, int type) {
 
     // View example in clickfaq.pdf
     int tailroom = 0;
@@ -65,11 +80,11 @@ Packet* IGMPGroupMember::generate_report(IPAddress group_address) {
     memset(packet->data(), 0, packet->length()); //
 
     MembershipReport* report = (MembershipReport*)(packet->data());
-    report->type = 0x22;
+    report->type = REPORT;
     report->n_group_records = htons(1); // TODO HARDCODE
 
     GroupRecord* group = (GroupRecord*)(packet->data() + sizeof(report));
-    group->record_type = 4;
+    group->record_type = type;
     group->multicast_address = group_address;
 
     report->checksum = click_in_cksum(packet->data(), packet->length());

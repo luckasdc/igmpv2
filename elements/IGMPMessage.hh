@@ -1,17 +1,12 @@
 #ifndef IGMP_IGMPMESSAGE_HH
 #define IGMP_IGMPMESSAGE_HH
 
-struct MessageType {
-
-};
-
-struct RecordType {
-
-};
-
-struct IPHeader {
-
-};
+#define REPORT 0x22
+#define QUERY 0x11
+#define IN 1
+#define EX 2
+#define EX_TO_IN 3
+#define IN_TO_EX 4
 
 enum class report_record_type : uint8_t {
     m_include = 1,
@@ -34,9 +29,9 @@ struct MembershipQuery {
 };
 
 struct GroupRecord {
-    report_record_type record_type;
-    uint8_t aux_data_len;
-    uint16_t n_sources;
+    uint8_t record_type;
+    uint8_t aux_data_len ;
+    uint16_t n_sources = 0;
     IPAddress multicast_address;
     // Vector<IPAddress> source_addresses;
 };
@@ -45,7 +40,7 @@ struct GroupRecordVector {};
 
 
 struct MembershipReport {
-    uint8_t type = 34; // 0x22
+    uint8_t type; // 0x22
     uint8_t reserved_1;
     uint16_t checksum;
     uint16_t reserved_2;

@@ -17,10 +17,10 @@ public:
 
     // Handlers
     static int join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
-    //static int leave_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
+    static int leave_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
     void add_handlers();
 
-    Packet* generate_report(IPAddress group_address);
+    Packet* generate_report(IPAddress group_address, int type);
 
 private:
     uint32_t maxSize;

@@ -11,3 +11,14 @@ telnet localhost {portnumber} where portnumber is:
 
 list objects: *READ list*
 
+### TODO
+[] GroupMember must receive queries (Luckas)
+[] implement mode reports (similar to change reports) (Luckas)
+[] GroupMember can answer queries by sending a reports (Luckas)
+[] timers checken
+
+
+### BUGS TO FIX
+
+
+
