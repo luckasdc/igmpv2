@@ -12,6 +12,7 @@ public:
     const char *port_count() const	{ return "0/1"; }
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
+
     void push(int, Packet*);
 
     // Handlers
