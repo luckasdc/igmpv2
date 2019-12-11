@@ -24,8 +24,20 @@ int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
 
 void IGMPGroupMember::push(int, Packet *p){
     click_chatter("Got a packet of size %d",p->length());
+    handle_query(p);
     if (p->length() > maxSize)  p->kill();
     else output(0).push(p);
+}
+
+int IGMPGroupMember::handle_query(Packet *p) {
+    const MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
+    click_chatter("client igmp header temptype is %d", query->type);
+    click_chatter("client igmp checksum is %d", query->checksum);
+    click_chatter("client igmp group address is %s", query->group_address.unparse().c_str());
+
+    if (query->type == QUERY) { click_chatter("Yes, it is a query");};
+
+
 }
 
 int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {

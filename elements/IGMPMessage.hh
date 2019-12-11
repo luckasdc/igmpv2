@@ -16,7 +16,7 @@ enum class report_record_type : uint8_t {
 };
 
 struct MembershipQuery {
-    uint8_t type = 17; // 0x11
+    uint8_t type; // 0x11
     uint8_t max_resp_code;
     uint16_t checksum;
     IPAddress group_address;
@@ -60,11 +60,5 @@ struct MembershipReportExtended {
     static MembershipReportExtended parse(Packet* p);
 };
 
-
-MembershipReportExtended MembershipReportExtended::parse(Packet* p) {
-    MembershipReportExtended output;
-
-    return output;
-}
 
 #endif //IGMP_IGMPMESSAGE_HH

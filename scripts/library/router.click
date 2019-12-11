@@ -30,8 +30,15 @@ elementclass Router {
 	// ARP responses are copied to each ARPQuerier and the host.
 	arpt :: Tee (3);
 
+	//////////
+
+	igmp :: IGMPRouter ()
+
+	///////
+
 	// Input and output paths for interface 0
 	input[0]
+	    -> [0]igmp[0]
 		-> HostEtherFilter($server_address)
 		-> server_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($server_address)
@@ -44,6 +51,7 @@ elementclass Router {
 
 	// Input and output paths for interface 1
 	input[1]
+	    -> [1]igmp[1]
 		-> HostEtherFilter($client1_address)
 		-> client1_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($client1_address)
@@ -56,6 +64,7 @@ elementclass Router {
 
 	// Input and output paths for interface 2
 	input[2]
+	    -> [0]igmp[2]
 		-> HostEtherFilter($client2_address)
 		-> client2_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($client2_address)

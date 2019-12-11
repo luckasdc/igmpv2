@@ -9,11 +9,14 @@ public:
     ~IGMPGroupMember();
 
     const char *class_name() const	{ return "IGMPGroupMember"; }
-    const char *port_count() const	{ return "0/1"; }
+    const char *port_count() const	{ return "1/1"; }
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
 
     void push(int, Packet*);
+
+    // Query Responders
+    static int handle_query(Packet* p);
 
     // Handlers
     static int join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
