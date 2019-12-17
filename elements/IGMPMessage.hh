@@ -7,6 +7,8 @@
 #define EX 2
 #define EX_TO_IN 3
 #define IN_TO_EX 4
+#define RESPONSE_TO_QUERY 5 // internal usage only
+
 
 enum class report_record_type : uint8_t {
     m_include = 1,

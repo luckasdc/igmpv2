@@ -1,6 +1,8 @@
 #ifndef CLICK_IGMPGROUPMEMBER_HH
 #define CLICK_IGMPGROUPMEMBER_HH
 #include <click/element.hh>
+#include <click/hashtable.hh>
+
 CLICK_DECLS
 
 class IGMPGroupMember : public Element {
@@ -16,17 +18,18 @@ public:
     void push(int, Packet*);
 
     // Query Responders
-    static int handle_query(Packet* p);
+    int handle_query(Packet* p);
 
     // Handlers
     static int join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
     static int leave_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
     void add_handlers();
 
-    Packet* generate_report(IPAddress group_address, int type);
+    Packet* generate_report(int type, IPAddress group_address);
 
 private:
-    uint32_t maxSize;
+    HashTable<IPAddress, int> source_set;
+
 };
 
 CLICK_ENDDECLS
