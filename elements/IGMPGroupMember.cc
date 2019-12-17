@@ -24,10 +24,10 @@ int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
 void IGMPGroupMember::push(int, Packet *p){
     click_chatter("Got a packet of size %d",p->length());
     handle_query(p);
-    output(0).push(p);
+    //output(0).push(p);
 }
 
-int IGMPGroupMember::handle_query(Packet *p) {
+void IGMPGroupMember::handle_query(Packet *p) {
     const MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
     if (query->type == QUERY) {
@@ -36,7 +36,9 @@ int IGMPGroupMember::handle_query(Packet *p) {
         click_chatter("client igmp group address is %s", query->group_address.unparse().c_str());
 
         Packet* packet = this->generate_report(RESPONSE_TO_QUERY, query->group_address);
-        this->output(0).push(packet);
+        if (packet != nullptr) {
+            this->output(0).push(packet);
+        }
     }
 }
 
@@ -65,10 +67,11 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
     if(Args(args, self, errh).read_mp("GROUP", group).complete() < 0) return -1;
     click_chatter("Leave group ip %s", group.unparse().c_str());
 
-    // remove current group from source_set
-    self->source_set.erase(group);
     // Generate Membership report (Sent while joining or when responding to membership query)
     Packet* packet = self->generate_report(EX_TO_IN, group);
+    // remove current group from source_set
+    self->source_set.erase(group);
+
     self->output(0).push(packet);
     return 0;
 }
@@ -83,14 +86,15 @@ Packet* IGMPGroupMember::generate_report(int type, IPAddress group_address) {
 
     int n_records = this->source_set.size();
     click_chatter("Generate report! n_records = %d", n_records);
+    if (n_records == 0) {
+        return nullptr;
+    }
 
     // View example in clickfaq.pdf
     int tailroom = 0;
     int packetsize = sizeof(struct MembershipReport) + n_records * sizeof(struct GroupRecord);
     int headroom = sizeof(click_ether) + sizeof(click_ip);
     WritablePacket* packet = Packet::make(headroom, 0, packetsize, tailroom);
-    click_chatter("Size of packet generated: %d", packetsize);
-    click_chatter("Size of click_ether: %d, click_ip: %d", sizeof(click_ether), sizeof(click_ip));
 
     if (packet == 0 ) {
         click_chatter("Cannot generate packet!");

@@ -18,7 +18,7 @@ public:
     void push(int, Packet*);
 
     // Query Responders
-    int handle_query(Packet* p);
+    void handle_query(Packet* p);
 
     // Handlers
     static int join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh);
