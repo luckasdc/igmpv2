@@ -38,20 +38,28 @@ elementclass Router {
 
 	// Input and output paths for interface 0
 	input[0]
-	    -> [0]igmp[0]
 		-> HostEtherFilter($server_address)
 		-> server_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($server_address)
 		-> [0]output;
 
 	server_arpq :: ARPQuerier($server_address) -> output;
-	server_class[1] -> arpt[0] -> [1]server_arpq;
-	server_class[2] -> Paint(1) -> ip;
 
+	server_class[1] -> arpt[0] -> [1]server_arpq;
+
+	server_class[2]
+	    -> Paint(1)
+	    -> igmp_classifier :: IPClassifier(ip proto igmp, -)
+
+	igmp_classifier[0]
+	    -> StripIPHeader
+	    -> [0]igmp;
+
+	igmp_classifier[1]
+	    -> ip;
 
 	// Input and output paths for interface 1
 	input[1]
-	    -> [1]igmp[1]
 		-> HostEtherFilter($client1_address)
 		-> client1_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($client1_address)
@@ -59,12 +67,20 @@ elementclass Router {
 
 	client1_arpq :: ARPQuerier($client1_address) -> [1]output;
 	client1_class[1] -> arpt[1] -> [1]client1_arpq;
-	client1_class[2] -> Paint(2) -> ip;
 
+    client1_class[2]
+        -> Paint(1)
+        -> igmp_classifier_c1 :: IPClassifier(ip proto igmp, -)
+
+    igmp_classifier_c1[0]
+        -> StripIPHeader
+        -> [1]igmp;
+
+    igmp_classifier_c1[1]
+        -> ip;
 
 	// Input and output paths for interface 2
 	input[2]
-	    -> [0]igmp[2]
 		-> HostEtherFilter($client2_address)
 		-> client2_class :: Classifier(12/0806 20/0001, 12/0806 20/0002, -)
 		-> ARPResponder($client2_address)
@@ -72,8 +88,16 @@ elementclass Router {
 
 	client2_arpq :: ARPQuerier($client2_address) -> [2]output;
 	client2_class[1] -> arpt[2] -> [1]client2_arpq;
-	client2_class[2] -> Paint(3) -> ip;
+	client2_class[2]
+	    -> Paint(3)
+        -> igmp_classifier_c2 :: IPClassifier(ip proto igmp, -)
 
+    igmp_classifier_c2[0]
+        -> StripIPHeader
+        -> [2]igmp;
+
+    igmp_classifier_c2[1]
+        -> ip;
 
 	// Local delivery
 	rt[0] -> [3]output
@@ -117,9 +141,21 @@ elementclass Router {
 		-> client2_ttl :: DecIPTTL
 		-> client2_frag :: IPFragmenter(1500)
 		-> client2_arpq;
-	
+
 	client2_paint[1] -> ICMPError($client2_address, redirect, host) -> rt;
 	client2_ipgw[1]  -> ICMPError($client2_address, parameterproblem) -> rt;
 	client2_ttl[1]   -> ICMPError($client2_address, timeexceeded) -> rt;
 	client2_frag[1]  -> ICMPError($client2_address, unreachable, needfrag) -> rt;
+
+    igmp[0]
+        -> IPEncap(2, $server_address, DST DST_ANNO, TTL 1)
+        -> server_arpq
+
+    igmp[1]
+        -> IPEncap(2, $client1_address, DST DST_ANNO, TTL 1)
+        -> client1_arpq
+
+    igmp[2]
+        -> IPEncap(2, $client2_address, DST DST_ANNO, TTL 1)
+        -> client2_arpq
 }

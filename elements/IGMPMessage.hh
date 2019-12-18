@@ -28,11 +28,19 @@ struct MembershipQuery {
     uint8_t qqic;
     uint8_t n_sources;
     // Vector<IPAddress> source_addresses;
+
+    void setup() {
+        this->type = QUERY;
+        this->n_sources = htons(0);
+        this->qrv = 0;
+        this->s_flag = 1;
+        this->max_resp_code = 1;
+    }
 };
 
 struct GroupRecord {
     uint8_t record_type;
-    uint8_t aux_data_len ;
+    uint8_t aux_data_len;
     uint16_t n_sources = 0;
     IPAddress multicast_address;
     // Vector<IPAddress> source_addresses;
@@ -52,6 +60,16 @@ struct MembershipReport {
     uint16_t n_group_records;
     // Vector<GroupRecord> group_records;
 
+//    static Vector<GroupRecord*> get_group_records(Packet* packet, int n_groups) {
+//        Vector<GroupRecord*> output;
+//        for (int j = 0; j < n_groups; j++) {
+//            // Add every grouprecord using pointer arithmetics (i is for calculating the amount of space)
+//            GroupRecord* group = (GroupRecord*) (packet->data() + sizeof(MembershipReport) + (j * sizeof(GroupRecord)));
+//            output.push_back(group);
+//        }
+//        return output;
+//    }
+
 //    inline unsigned int size() { return 8 + (this->n_group_records * sizeof(group_record)) }
 };
 
@@ -59,8 +77,7 @@ struct MembershipReportExtended {
     MembershipReport header;
     Vector <GroupRecordExtended> group_records;
 
-    static MembershipReportExtended parse(Packet* p);
-};
 
+};
 
 #endif //IGMP_IGMPMESSAGE_HH
