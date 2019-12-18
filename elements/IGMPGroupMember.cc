@@ -6,6 +6,7 @@
 #include <clicknet/udp.h>
 #include "IGMPGroupMember.hh"
 #include "IGMPMessage.hh"
+#include "utils.hh"
 
 
 
@@ -28,18 +29,30 @@ void IGMPGroupMember::push(int, Packet *p){
 }
 
 void IGMPGroupMember::handle_query(Packet *p) {
-    const MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
-    if (query->type == QUERY) {
-        click_chatter("client igmp header temptype is %d", query->type);
-        click_chatter("client igmp checksum is %d", query->checksum);
-        click_chatter("client igmp group address is %s", query->group_address.unparse().c_str());
+    try {
+        const MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
-        Packet* packet = this->generate_report(RESPONSE_TO_QUERY, query->group_address);
-        if (packet != nullptr) {
-            this->output(0).push(packet);
+        if (query->type == QUERY) {
+
+            if (checkQuery(p)) {
+                click_chatter("client igmp checksum is valid!");
+
+                Packet* packet = this->generate_report(RESPONSE_TO_QUERY, query->group_address);
+                if (packet != nullptr) {
+                    this->output(0).push(packet);
+                    return;
+                }
+            }
         }
     }
+    catch (...) {
+        p->kill();
+        return;
+    }
+
+
+    p->kill();
 }
 
 int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {

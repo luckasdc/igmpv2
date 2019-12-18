@@ -2,6 +2,10 @@
 // Created by Stan Schepers on 02/11/2019.
 //
 
+#include <clicknet/ip.h>
+#include <clicknet/ether.h>
+#include "IGMPMessage.hh"
+
 #include "utils.hh"
 
 // thanks to https://stackoverflow.com/questions/55455591/hex-string-to-uint8-t-msg
