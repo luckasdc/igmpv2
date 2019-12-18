@@ -11,11 +11,18 @@ telnet localhost {portnumber} where portnumber is:
 
 list objects: *READ list*
 
-### TODO
-[] GroupMember must receive queries (Luckas)
-[] implement mode reports (similar to change reports) (Luckas)
-[] GroupMember can answer queries by sending a reports (Luckas)
-[] timers checken
+### TODO CLIENT
+- [x] GroupMember must receive queries (Luckas)
+- [x] implement mode reports (similar to change reports) (Luckas)
+- [x] GroupMember can answer queries by sending a reports (Luckas)
+- [ ] Checksum van query valideren
+- [ ] QRV Handler
+- [ ] apply QRV while sending reports
+- [ ] Do not reply instantly to queries, check 5.2
+- [ ] Add timers!!!!
+
+
+
 
 
 ### BUGS TO FIX
