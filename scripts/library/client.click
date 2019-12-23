@@ -16,10 +16,9 @@ elementclass Client {
 
 		-> [1]output;
 
+    igmp::IGMPGroupMember()
 
 	// Here comes our part
-    igmp::IGMPGroupMember(MAXPACKETSIZE 20)
-
 	rt[2] // IGMP reports arrive here
 	    -> Print()
 	    -> igmp
@@ -27,8 +26,6 @@ elementclass Client {
         -> CheckIPHeader()
         -> arpq :: ARPQuerier($address)
         -> output
-
-
 
     ///
 

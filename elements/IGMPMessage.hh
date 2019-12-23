@@ -9,6 +9,9 @@
 #define IN_TO_EX 4
 #define RESPONSE_TO_QUERY 5 // internal usage only
 
+// TODO Fixed variables: a decent solution for these
+#define URI 2
+#define RV 2
 
 enum class report_record_type : uint8_t {
     m_include = 1,

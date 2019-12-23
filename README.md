@@ -21,8 +21,14 @@ list objects: *READ list*
 - [ ] Do not reply instantly to queries, check 5.2
 - [ ] Add timers!!!!
 
+### TODO CLIENT
 
 
+### TODO GENERAL
+- [ ] Proper solution for variables RV, URI, ...
+- [ ] TODO IP header  checken 
+- [ ] TODO UDP header checken
+- [ ] TODO mss in click element steken ip
 
 
 ### BUGS TO FIX

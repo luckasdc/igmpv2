@@ -5,8 +5,14 @@
 #ifndef IGMP_UTILS_HH
 #define IGMP_UTILS_HH
 
+
+
 bool checkQuery(Packet *p)
 {
+
+    // TODO IP header  checken
+    // TODO UDP header checken
+    // TODO mss in click element steken ip
     MembershipQuery* query = (MembershipQuery*)(p->data() + p->ip_header_length());
 
     //if (p->length() - p->ip_header_length() > sizeof(query)) { return false; }
