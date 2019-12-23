@@ -87,6 +87,8 @@ int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk
     report->generated_packet = packet;
     report->retransmit_times = RV;
 
+    self->output(0).push(packet->clone()->uniqueify());
+
     self->report_timers[group] = new Timer(&IGMPGroupMember::send_report, report);
     self->report_timers[group]->initialize(self);
     uint32_t delay = rand() % URI * 10^3; // ms -> sec
@@ -115,6 +117,8 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
     report->type = EX_TO_IN; // TODO klopt dit?
     report->generated_packet = packet;
     report->retransmit_times = RV;
+
+    self->output(0).push(packet->clone()->uniqueify());
 
     self->report_timers[group] = new Timer(&IGMPGroupMember::send_report, report);
     self->report_timers[group]->initialize(self);
@@ -186,7 +190,7 @@ void IGMPGroupMember::send_report(Timer* timer, void* ptr) {
     report->retransmit_times--;
 
     // Reschedule if it needs to be transmitted again
-    if (report->retransmit_times > 0) {
+    if (report->retransmit_times > 1) {
 
         uint32_t delay = rand() % URI * 10^3; // ms -> sec
         click_chatter("delay added (consecutive send): %d", delay);

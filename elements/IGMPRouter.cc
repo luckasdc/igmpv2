@@ -114,7 +114,7 @@ void IGMPRouter::send_general_query(Timer* timer, void* pVoid) {
     click_chatter("hello");
 
     router->general_query_timer.reschedule_after_sec(10);
-    for (int i = 0; i < router->noutputs; i++) {
+    for (int i = 0; i < router->noutputs(); i++) {
         router->output(i).push(packet);
     }
 }
