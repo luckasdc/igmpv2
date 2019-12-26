@@ -52,6 +52,8 @@ void IGMPGroupMember::handle_query(Packet *p) {
                 click_chatter("client igmp checksum is valid!");
 
                 Packet* packet = this->generate_report(RESPONSE_TO_QUERY, query->group_address, this);
+
+
                 if (packet != nullptr) {
                     this->output(0).push(packet);
                     return;

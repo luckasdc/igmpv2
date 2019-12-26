@@ -15,23 +15,29 @@ list objects: *READ list*
 - [x] GroupMember must receive queries (Luckas)
 - [x] implement mode reports (similar to change reports) (Luckas)
 - [x] GroupMember can answer queries by sending a reports (Luckas)
-- [ ] Checksum van query valideren
-- [ ] QRV Handler
+- [x] Checksum van query valideren
+- [x] QRV Handler
 - [ ] apply QRV while sending reports
-- [ ] Do not reply instantly to queries, check 5.2
+- [x] Do not reply instantly to queries, check 5.2
 - [ ] Add timers!!!!
 
 ### TODO CLIENT
 
 
 ### TODO GENERAL
-- [ ] Proper solution for variables RV, URI, ...
+- [x] Proper solution for variables RV, URI, ...
 - [ ] TODO IP header  checken 
 - [ ] TODO UDP header checken
 - [ ] TODO mss in click element steken ip
+- [ ] Check + TEST code for max resp time
 
 
 ### BUGS TO FIX
 
 
 
+
+
+
+### Things to write in verslagske
+- All time ranges are expressed in miliseconds

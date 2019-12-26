@@ -20,9 +20,20 @@ enum class report_record_type : uint8_t {
     c_exlude = 4
 };
 
+// Structs for floating point repr for calculating max resp time
+typedef union {
+    float f;
+    struct {
+        unsigned int sign : 1;
+        unsigned int exp : 3;
+        unsigned int mant : 4;
+    } parts;
+} float_cast;
+
+
 struct MembershipQuery {
     uint8_t type; // 0x11
-    uint8_t max_resp_code;
+    uint8_t max_resp_code = 0;
     uint16_t checksum;
     IPAddress group_address;
     uint8_t resv : 4;
@@ -38,6 +49,15 @@ struct MembershipQuery {
         this->qrv = 0;
         this->s_flag = 1;
         this->max_resp_code = 1;
+    }
+
+    int max_resp_time() const {
+        // https://stackoverflow.com/questions/15685181/how-to-get-the-sign-mantissa-and-exponent-of-a-floating-point-number
+        if (max_resp_code < 128) { return max_resp_code;}
+        else {
+            float_cast mrc = { .f = max_resp_code };
+            return ((mrc.parts.mant | 0x10) << (mrc.parts.exp + 3)) * 100; // Max resp time is repr in 1/10th of a second
+        }
     }
 };
 
