@@ -201,8 +201,8 @@ Packet* IGMPGroupMember::generate_report(int type, IPAddress group_address, IGMP
 
     MembershipReport* report = (MembershipReport*)(packet->data());
     report->type = REPORT;
-    report->n_group_records = htons(n_records);
     if (type == RESPONSE_TO_QUERY) {
+        report->n_group_records = htons(n_records);
         int i = 0;
         for (HashTable<IPAddress, int>::iterator it = self->source_set.begin(); it; ++it) {
             // Add every grouprecord using pointer arithmetics (i is for calculating the amount of space)
@@ -213,6 +213,7 @@ Packet* IGMPGroupMember::generate_report(int type, IPAddress group_address, IGMP
         }
     }
     else {
+        report->n_group_records = htons(1);
         GroupRecord* group = (GroupRecord*)(packet->data() + sizeof(report));
         group->record_type = type;
         group->multicast_address = group_address;
