@@ -105,7 +105,11 @@ int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk
     IGMPGroupMember* self = (IGMPGroupMember*) e;
     cp_argvec(s, args);
     if(Args(args, self, errh).read_mp("GROUP", group).complete() < 0) return -1;
-    click_chatter("Entered group ip %s", group.unparse().c_str());
+
+    // Check if not already in table
+    if (self->source_set.find(group) != self->source_set.end()) {
+        return 0;
+    }
 
     // Add current group to source_set
     self->source_set.find_insert(group, 1);
@@ -136,7 +140,11 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
     IGMPGroupMember* self = (IGMPGroupMember*) e;
     cp_argvec(s, args);
     if(Args(args, self, errh).read_mp("GROUP", group).complete() < 0) return -1;
-    click_chatter("Leave group ip %s", group.unparse().c_str());
+
+    // Check if it exists in table
+    if (self->source_set.find(group) == self->source_set.end()) {
+        return 0;
+    }
 
     // Generate Membership report (Sent while joining or when responding to membership query)
     Packet* packet = self->generate_report(EX_TO_IN, group, self);
