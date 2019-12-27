@@ -38,19 +38,6 @@ int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
     return 0;
 }
 
-//int IGMPGroupMember::initialize(ErrorHandler* errh) {
-   /*
-    try {
-        this->general_query_timer.initialize(this, true);
-        this->general_query_timer.assign(IGMPGroupMember::generate_report, this);
-        this->general_query_timer.schedule_now();
-    } catch (...) {
-        return -1;
-    }
-    return 0;
-    */
-//}
-
 void IGMPGroupMember::push(int port, Packet *p){
     click_chatter("Got a packet of size %d on input %d", p->length(), port);
     if (port == 0) { handle_query(p); }
@@ -245,7 +232,7 @@ void IGMPGroupMember::send_change_report(Timer* timer, void* ptr) {
     }
     else {
         // Delete timer
-        report->self->report_timers[report->group_address] = 0;
+        report->self->report_timers[report->group_address]->clear();
     }
 }
 

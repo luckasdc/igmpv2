@@ -45,7 +45,9 @@ elementclass Router {
 
 	server_arpq :: ARPQuerier($server_address) -> output;
 
-	server_class[1] -> arpt[0] -> [1]server_arpq;
+	server_class[1]
+	    -> arpt[0]
+	    -> [1]server_arpq;
 
 	server_class[2]
 	    -> Paint(1)
@@ -60,8 +62,12 @@ elementclass Router {
 		-> ARPResponder($client1_address)
 		-> [1]output;
 
-	client1_arpq :: ARPQuerier($client1_address) -> [1]output;
-	client1_class[1] -> arpt[1] -> [1]client1_arpq;
+	client1_arpq :: ARPQuerier($client1_address)
+	    -> [1]output;
+
+	client1_class[1]
+	    -> arpt[1]
+	    -> [1]client1_arpq;
 
     client1_class[2]
         -> Paint(1)
@@ -89,6 +95,7 @@ elementclass Router {
         -> igmp_classifier_c2 :: IPClassifier(ip proto igmp, -)
 
     igmp_classifier_c2[0]
+        -> Strip(14)
         -> [2]igmp;
 
     igmp_classifier_c2[1]

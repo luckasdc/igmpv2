@@ -27,6 +27,7 @@ list objects: *READ list*
 
 ### TODO GENERAL
 - [x] Proper solution for variables RV, URI, ...
+- [ ] Router Alert option
 - [ ] TODO IP header  checken 
 - [ ] TODO UDP header checken
 - [ ] TODO mss in click element steken ip
