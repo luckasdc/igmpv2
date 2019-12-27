@@ -3,8 +3,13 @@
 
 #include <click/element.hh>
 #include <click/timer.hh>
+#include <click/hashmap.hh>
+#include "IGMPRouterFilter.hh"
 
 CLICK_DECLS
+
+using namespace router;
+
 
 class IGMPRouter : public Element {
 public:
@@ -12,12 +17,11 @@ public:
 
     const char* class_name() const { return "IGMPRouter"; }
 
-    const char* port_count() const { return "3/3"; }
+    const char* port_count() const { return "-/="; }
 
     const char* processing() const { return PUSH; }
 
-    int initialize(ErrorHandler * errh);
-
+    int initialize(ErrorHandler* errh);
 
     void add_handlers();
 
@@ -27,8 +31,25 @@ public:
 
     static void send_general_query(Timer* timer, void* ptr);
 
+    static void send_other_query(Timer* timer, void* ptr);
+
+    static void send_group_specific_query(Timer* timer, void* ptr);
 
     int robustness_variable = 2;
+    int query_interval = 125;
+    int query_response = 100;
+    int last_member_query_count = 1;
+    int last_member_query_interval = 1;
+    int unsolicited_report_interval = 1;
+
+    bool other_querier;
+
+    IPAddress _group_address;
+
+    inline int group_member_interval() { return robustness_variable * query_interval + query_response; }
+
+    inline int last_member_query_timer() { return last_member_query_count * last_member_query_interval; }
+
 
 private:
 
@@ -41,6 +62,9 @@ private:
     uint32_t maxSize;
 
     Timer general_query_timer;
+    Timer other_querier_timer;
+
+    RouterState state;
 
 };
 

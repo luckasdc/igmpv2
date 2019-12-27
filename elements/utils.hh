@@ -1,27 +1,31 @@
 //
 // Created by Stan Schepers on 02/11/2019.
 //
+#pragma once
 
 #ifndef IGMP_UTILS_HH
 #define IGMP_UTILS_HH
 
+#include <clicknet/ip.h>
+#include <clicknet/ether.h>
+#include <vector>
+#include <string>
 
 
-bool checkQuery(Packet *p)
-{
+using namespace std;
 
-    // TODO IP header  checken
-    // TODO UDP header checken
-    // TODO mss in click element steken ip
-    MembershipQuery* query = (MembershipQuery*)(p->data() + p->ip_header_length());
-
-    //if (p->length() - p->ip_header_length() > sizeof(query)) { return false; }
-
-    // One's complement of total payload is done by adding the bitwise operator & 0xFFFF
-    // must be equal to 0
-    return (click_in_cksum((unsigned char *) query, p->length() - p->ip_header_length()) & 0xFFFF) == 0;
-
+// thanks to https://stackoverflow.com/questions/55455591/hex-string-to-uint8-t-msg
+std::vector <uint8_t> HexToBytes(const string &hex) {
+    std::vector <uint8_t> bytes;
+    for (unsigned int i = 0; i < hex.length(); i += 2) {
+        string byteString = hex.substr(i, 2);
+        uint8_t byte = (uint8_t) strtol(byteString.c_str(), nullptr, 16);
+        bytes.push_back(byte);
+    }
+    return bytes;
 }
+
+
 
 
 #endif //IGMP_UTILS_HH
