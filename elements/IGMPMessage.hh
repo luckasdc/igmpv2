@@ -120,14 +120,13 @@ struct MembershipReport {
     uint16_t checksum;
     uint16_t reserved_2;
     uint16_t n_group_records;
-    // Vector<GroupRecord> group_records;
 
-    static Vector<GroupRecord*> get_group_records(Packet* packet, int n_groups) {
+    static Vector<GroupRecord*> get_group_records(Packet* p, int n_records) {
         Vector < GroupRecord * > output;
-        for (int j = 0; j < n_groups; j++) {
+        for (int j = 0; j < n_records; j++) {
             // Add every grouprecord using pointer arithmetics (i is for calculating the amount of space)
-            GroupRecord* group = (GroupRecord*) (packet->data() + sizeof(MembershipReport) + (j * sizeof(GroupRecord)));
-            output.push_back(group);
+            GroupRecord* group_record = (GroupRecord*) (p->data() + p->ip_header_length() + sizeof(MembershipReport) + j * sizeof(GroupRecord));
+            output.push_back(group_record);
         }
         return output;
     }

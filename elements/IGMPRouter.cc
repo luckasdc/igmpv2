@@ -90,21 +90,12 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
     // make report
     MembershipReport* report = (MembershipReport*) (p->data() + p->ip_header_length());
 
-    // loop over group_records
-    uint16_t n_group_records = ntohs(report->n_group_records);
+    // get group records
+    uint16_t n = ntohs(report->n_group_records);
 
-    for (int i = 0; i < n_group_records; i++) {
-        // zoek in table naar de group state
-        GroupRecord* group_record = (GroupRecord*) (p->data() + p->ip_header_length() + sizeof(MembershipReport) + i * sizeof(GroupRecord));
-        click_chatter(" - A group record: %s", group_record->multicast_address.unparse().c_str());
+    auto result = report->get_group_records(p, n);
 
-
-        // check state
-
-        // maak aanpassingen
-
-    }
-    click_chatter("Router:\tHandled Report");
+    click_chatter("Router:\tHandled Report. Size of records: %d", result.size());
     p->kill();
 }
 
