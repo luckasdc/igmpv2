@@ -17,9 +17,10 @@ list objects: *READ list*
 - [x] GroupMember can answer queries by sending a reports (Luckas)
 - [x] Checksum van query valideren
 - [x] QRV Handler
-- [ ] apply QRV while sending reports
+- [x] apply QRV while sending reports
 - [x] Do not reply instantly to queries, check 5.2
-- [ ] Add timers!!!!
+- [ ] add group-specific reports
+- [ ] add expired timer cheking (p 23 en 24)
 
 ### TODO CLIENT
 

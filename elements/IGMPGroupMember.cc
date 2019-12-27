@@ -38,9 +38,8 @@ int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
 
 void IGMPGroupMember::push(int port, Packet *p){
     click_chatter("Got a packet of size %d on input %d", p->length(), port);
-    //if (port == 0) { handle_query(p); }
-    //else { p->kill(); }
-    p->kill();
+    if (port == 0) { handle_query(p); }
+    else { p->kill(); }
 
 }
 
@@ -84,6 +83,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
 
                     // 3. If Group specific AND no pending previous ones, use group timers
                     // TODO
+                    click_chatter("Todo: respond to group specific query");
 
                     // 4. TODO
 
@@ -236,10 +236,10 @@ void IGMPGroupMember::send_change_report(Timer* timer, void* ptr) {
 void IGMPGroupMember::send_general_report(Timer *timer, void *ptr) {
     // Convert pointer back to report data struct
     ReportData* report = (ReportData*) ptr;
-
-
-
-
+    // Send report
+    report->self->output(1).push(report->generated_packet->clone()->uniqueify());
+    // Clear timer
+    timer->clear();
 }
 
 CLICK_ENDDECLS
