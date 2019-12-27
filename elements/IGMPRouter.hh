@@ -53,11 +53,11 @@ public:
 
 private:
 
-    void received_igmp(Packet*);
+    void received_igmp(int port, Packet* p);
 
-    void received_igmp_query(Packet*);
+    void received_igmp_query(int port, Packet* p);
 
-    void received_igmp_report(Packet*);
+    void received_igmp_report(int port, Packet* p);
 
     uint32_t maxSize;
 

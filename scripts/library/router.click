@@ -49,14 +49,9 @@ elementclass Router {
 
 	server_class[2]
 	    -> Paint(1)
-	    -> igmp_classifier :: IPClassifier(ip proto igmp, -)
+	    -> [0] igmp; // Send udp data directly to igmp
 
-	igmp_classifier[0]
-	    -> StripIPHeader
-	    -> [0]igmp;
 
-	igmp_classifier[1]
-	    -> ip;
 
 	// Input and output paths for interface 1
 	input[1]
@@ -73,11 +68,12 @@ elementclass Router {
         -> igmp_classifier_c1 :: IPClassifier(ip proto igmp, -)
 
     igmp_classifier_c1[0]
-        -> StripIPHeader
+        -> Strip(14)
         -> [1]igmp;
 
     igmp_classifier_c1[1]
         -> ip;
+
 
 	// Input and output paths for interface 2
 	input[2]
@@ -93,7 +89,6 @@ elementclass Router {
         -> igmp_classifier_c2 :: IPClassifier(ip proto igmp, -)
 
     igmp_classifier_c2[0]
-        -> StripIPHeader
         -> [2]igmp;
 
     igmp_classifier_c2[1]
@@ -101,7 +96,9 @@ elementclass Router {
 
 	// Local delivery
 	rt[0] -> [3]output
-	
+
+
+
 	// Forwarding paths per interface
 	rt[1]
 		-> DropBroadcasts

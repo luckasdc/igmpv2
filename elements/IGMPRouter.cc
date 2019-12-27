@@ -32,69 +32,71 @@ int IGMPRouter::configure(Vector <String> &conf, ErrorHandler* errh) {
 
 void IGMPRouter::push(int port, Packet* p) {
 
-    this->output(port).push(p);
+    //this->output(port).push(p);
 
-//    switch (port) {
-//        // packets from server
-//        case 0: {
-//            auto ip_h = (click_ip*) p->data();
-//            // this->filter.is_listening_to(ip_h->ip_dst, ip_h->ip_src)
-//            // IF the router listens to this stream send via port 1 else 2
-//            if (1 == 1) {
-//                output(1).push(p);
-//            } else {
-//                output(2).push(p);
-//            }
-//            break;
-//        }
-//            // all IGMP
-//        case 1: {
-//            this->received_igmp(p);
-//            break;
-//        }
-//        default: {
-//            p->kill();
-//            return;
-//        }
-//    }
+    switch (port) {
+        // packets from server
+        case 0: {
+            auto ip_h = (click_ip*) p->data();
+            // this->filter.is_listening_to(ip_h->ip_dst, ip_h->ip_src)
+            // IF the router listens to this stream send via port 1 else 2
+            if (1 == 1) {
+                output(1).push(p);
+            } else {
+                output(2).push(p);
+            }
+            break;
+        }
+        // IGMP port 1
+        case 1: {
+            this->received_igmp(port, p);
+            break;
+        }
+        // IGMP Port 2
+        case 2: {
+            this->received_igmp(port, p);
+            break;
+        }
+        default: {
+            p->kill();
+            return;
+        }
+    }
 }
 
-void IGMPRouter::received_igmp(Packet* p) {
-    click_chatter("Received IGMP Packet");
+void IGMPRouter::received_igmp(int port, Packet* p) {
+    uint8_t* type = (uint8_t*) (p->data() + p->ip_header_length());
+    // TODO VALIDATE
 
-    auto data = p->data();
-
-    auto igmp_member_header = reinterpret_cast<MembershipReport*>(p);
-    // Check if membership query
     // Check if report
-    switch (igmp_member_header->type) {
-        case 17:
-            this->received_igmp_query(p);
-        case 34:
-            this->received_igmp_report(p);
+    switch (*type) {
+        case QUERY:
+            this->received_igmp_query(port, p);
+            return;
+        case REPORT:
+            this->received_igmp_report(port, p);
+            return;
     }
     p->kill();
 }
 
-void IGMPRouter::received_igmp_query(Packet* p) {
+void IGMPRouter::received_igmp_query(int port, Packet* p) {
     click_chatter("Router:\tReceived IGMP Query");
-    auto data = p->data();
     // Pass effkes
 }
 
-void IGMPRouter::received_igmp_report(Packet* p) {
+void IGMPRouter::received_igmp_report(int port, Packet* p) {
     click_chatter("Router:\tReceived IGMP Report");
-    auto data = p->data();
-
     // make report
-    auto report = (MembershipReport*) data;
+    MembershipReport* report = (MembershipReport*) (p->data() + p->ip_header_length());
 
     // loop over group_records
     uint16_t n_group_records = ntohs(report->n_group_records);
-    auto group_record = (GroupRecord*) (data + sizeof(MembershipReport));
 
     for (int i = 0; i < n_group_records; i++) {
         // zoek in table naar de group state
+        GroupRecord* group_record = (GroupRecord*) (p->data() + p->ip_header_length() + sizeof(MembershipReport) + i * sizeof(GroupRecord));
+        click_chatter(" - A group record: %s", group_record->multicast_address.unparse().c_str());
 
 
         // check state
