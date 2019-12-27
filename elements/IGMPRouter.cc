@@ -4,13 +4,13 @@
 #include <click/packet.hh>
 #include <clicknet/ip.h>
 #include <clicknet/ether.h>
-#include "IGMPRouter.hh"
 #include "IGMPMessage.hh"
+#include "IGMPRouter.hh"
+
+
 
 
 CLICK_DECLS
-
-class MembershipReportExtended;
 
 
 int IGMPRouter::initialize(ErrorHandler* errh) {
@@ -31,8 +31,6 @@ int IGMPRouter::configure(Vector <String> &conf, ErrorHandler* errh) {
 }
 
 void IGMPRouter::push(int port, Packet* p) {
-    click_chatter("Got a packet of size %d", p->length());
-    if (p->length() > 10000000000) p->kill();
 
     this->output(port).push(p);
 
@@ -79,44 +77,77 @@ void IGMPRouter::received_igmp(Packet* p) {
 }
 
 void IGMPRouter::received_igmp_query(Packet* p) {
-    click_chatter("Received IGMP Query");
+    click_chatter("Router:\tReceived IGMP Query");
     auto data = p->data();
     // Pass effkes
 }
 
 void IGMPRouter::received_igmp_report(Packet* p) {
-    click_chatter("Received IGMP Report");
+    click_chatter("Router:\tReceived IGMP Report");
     auto data = p->data();
 
+    // make report
+    auto report = (MembershipReport*) data;
 
+    // loop over group_records
+    uint16_t n_group_records = ntohs(report->n_group_records);
+    auto group_record = (GroupRecord*) (data + sizeof(MembershipReport));
+
+    for (int i = 0; i < n_group_records; i++) {
+        // zoek in table naar de group state
+
+
+        // check state
+
+        // maak aanpassingen
+
+    }
+    click_chatter("Router:\tHandled Report");
+    p->kill();
 }
 
 void IGMPRouter::add_handlers() {
 }
 
 
-void IGMPRouter::send_general_query(Timer* timer, void* pVoid) {
-    IGMPRouter* router = (IGMPRouter*) pVoid;
-
+WritablePacket* generate_general_query(IGMPRouter* router) {
     WritablePacket* packet = Packet::make(sizeof(click_ip) + sizeof(click_ether), nullptr, sizeof(MembershipQuery), 0);
     memset(packet->data(), 0, packet->length());
 
     packet->set_dst_ip_anno(IPAddress("224.0.0.1"));
-    MembershipQuery* membership_query = new(packet->data()) MembershipQuery;
+    MembershipQuery* membership_query = (MembershipQuery*) (packet->data());
     membership_query->setup();
     membership_query->group_address = IPAddress(0);
     membership_query->qrv = router->robustness_variable;
-
-
     membership_query->checksum = 0;
     membership_query->checksum = click_in_cksum(packet->data(), packet->length());
+    return packet;
+}
 
+void IGMPRouter::send_general_query(Timer* timer, void* ptr) {
+    IGMPRouter* router = (IGMPRouter*) ptr;
     click_chatter("hello");
-
     router->general_query_timer.reschedule_after_sec(10);
     for (int i = 0; i < router->noutputs(); i++) {
-        router->output(i).push(packet);
+        router->output(i).push(generate_general_query(router));
     }
+}
+
+void IGMPRouter::send_other_query(Timer* timer, void* ptr) {
+    auto router = (IGMPRouter*) ptr;
+    router->other_querier = false;
+    router->general_query_timer.reschedule_after_sec(10);
+}
+
+void IGMPRouter::send_group_specific_query(Timer* timer, void* ptr) {
+    auto router = (IGMPRouter*) ptr;
+
+    MembershipQuery query;
+    query.setup();
+    query.set_max_response_code(router->last_member_query_interval);
+    query.group_address = router->_group_address;
+    router->_group_address = IPAddress("0.0.0.0");
+
 }
 
 CLICK_ENDDECLS

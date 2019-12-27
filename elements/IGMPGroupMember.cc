@@ -7,7 +7,6 @@
 #include <clicknet/udp.h>
 #include "IGMPGroupMember.hh"
 #include "IGMPMessage.hh"
-#include "utils.hh"
 
 
 
@@ -17,6 +16,22 @@ IGMPGroupMember::IGMPGroupMember()
 
 IGMPGroupMember::~ IGMPGroupMember()
 {}
+
+
+bool checkQuery(Packet* p) {
+
+    // TODO IP header  checken
+    // TODO UDP header checken
+    // TODO mss in click element steken ip
+    MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
+
+    //if (p->length() - p->ip_header_length() > sizeof(query)) { return false; }
+
+    // One's complement of total payload is done by adding the bitwise operator & 0xFFFF
+    // must be equal to 0
+    return (click_in_cksum((unsigned char*) query, p->length() - p->ip_header_length()) & 0xFFFF) == 0;
+}
+
 
 int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
 
@@ -58,7 +73,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
                     ReportData* report = new ReportData();
                     report->self = this;
                     report->generated_packet = packet;
-                    uint32_t delay = rand() % query->max_resp_time() * 10^3; // ms -> sec
+                    uint32_t delay = rand() % query->get_max_response_time() * 10^3; // ms -> sec
 
                     // Send report based on the following rules:
 

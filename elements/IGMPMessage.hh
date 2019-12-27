@@ -1,6 +1,11 @@
 #ifndef IGMP_IGMPMESSAGE_HH
 #define IGMP_IGMPMESSAGE_HH
 
+#include <click/config.h>
+#include <click/packet.hh>
+#include <memory>
+
+
 #define REPORT 0x22
 #define QUERY 0x11
 
@@ -21,7 +26,6 @@ enum class report_record_type : uint8_t {
     c_exlude = 4
 };
 
-// Structs for floating point repr for calculating max resp time
 typedef union {
     float f;
     struct {
@@ -31,10 +35,18 @@ typedef union {
     } parts;
 } float_cast;
 
+namespace util {
+
+}
+
+
+
 
 struct MembershipQuery {
     uint8_t type; // 0x11
+private:
     uint8_t max_resp_code = 0;
+public:
     uint16_t checksum;
     IPAddress group_address;
     uint8_t resv : 4;
@@ -44,21 +56,39 @@ struct MembershipQuery {
     uint8_t n_sources;
     // Vector<IPAddress> source_addresses;
 
+    unsigned int code2value(uint8_t c) const {
+        if (c < 128) return c;
+        float_cast mrc = {.f = c};
+        return ((mrc.parts.mant) | 0x10 << (mrc.parts.exp + 3) * 100);
+    }
+
+    uint8_t value2code(unsigned int v) const {
+        if (v < 128) return (uint8_t) v;
+        uint8_t c = 128;
+        while (c < 255) {
+            uint8_t value_of_c = code2value(c);
+            if (v == value_of_c) return c;
+            if (v < value_of_c) return c - 1;
+            c += 1;
+        }
+        return 255;
+    }
+
+    unsigned int get_max_response_time() const {
+        return code2value(this->max_resp_code);
+    }
+
+
+    void set_max_response_code(unsigned int max_reponse_time) {
+        this->max_resp_code = value2code(max_reponse_time);
+    }
+
     void setup() {
         this->type = QUERY;
         this->n_sources = htons(0);
         this->qrv = 0;
         this->s_flag = 1;
         this->max_resp_code = 1;
-    }
-
-    int max_resp_time() const {
-        // https://stackoverflow.com/questions/15685181/how-to-get-the-sign-mantissa-and-exponent-of-a-floating-point-number
-        if (max_resp_code < 128) { return max_resp_code;}
-        else {
-            float_cast mrc = { .f = max_resp_code };
-            return ((mrc.parts.mant | 0x10) << (mrc.parts.exp + 3)) * 100; // Max resp time is repr in 1/10th of a second
-        }
     }
 };
 
@@ -68,11 +98,19 @@ struct GroupRecord {
     uint16_t n_sources = 0;
     IPAddress multicast_address;
     // Vector<IPAddress> source_addresses;
-};
 
-struct GroupRecordExtended {
-    GroupRecord header;
-    Vector <IPAddress> source_addresses;
+    // TODO: error
+    Vector <IPAddress> get_source_addresses() {
+        Vector <IPAddress> output;
+        auto start = this + sizeof(GroupRecord);
+        for (int j = 0; j < this->n_sources; j++) {
+            uint32_t data = *(uint32_t * )(start + (j * sizeof(IPAddress)));
+            IPAddress ip = IPAddress(data);
+            output.push_back(ip);
+        }
+        return output;
+    }
+
 };
 
 
@@ -84,24 +122,18 @@ struct MembershipReport {
     uint16_t n_group_records;
     // Vector<GroupRecord> group_records;
 
-//    static Vector<GroupRecord*> get_group_records(Packet* packet, int n_groups) {
-//        Vector<GroupRecord*> output;
-//        for (int j = 0; j < n_groups; j++) {
-//            // Add every grouprecord using pointer arithmetics (i is for calculating the amount of space)
-//            GroupRecord* group = (GroupRecord*) (packet->data() + sizeof(MembershipReport) + (j * sizeof(GroupRecord)));
-//            output.push_back(group);
-//        }
-//        return output;
-//    }
+    static Vector<GroupRecord*> get_group_records(Packet* packet, int n_groups) {
+        Vector < GroupRecord * > output;
+        for (int j = 0; j < n_groups; j++) {
+            // Add every grouprecord using pointer arithmetics (i is for calculating the amount of space)
+            GroupRecord* group = (GroupRecord*) (packet->data() + sizeof(MembershipReport) + (j * sizeof(GroupRecord)));
+            output.push_back(group);
+        }
+        return output;
+    }
 
 //    inline unsigned int size() { return 8 + (this->n_group_records * sizeof(group_record)) }
 };
 
-struct MembershipReportExtended {
-    MembershipReport header;
-    Vector <GroupRecordExtended> group_records;
-
-
-};
 
 #endif //IGMP_IGMPMESSAGE_HH
