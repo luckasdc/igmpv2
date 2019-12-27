@@ -14,7 +14,7 @@ public:
     ~IGMPGroupMember();
 
     const char *class_name() const	{ return "IGMPGroupMember"; }
-    const char *port_count() const	{ return "1/1"; }
+    const char *port_count() const	{ return "1/2"; }
     const char *processing() const	{ return PUSH; }
     int configure(Vector<String>&, ErrorHandler*);
 
@@ -32,7 +32,11 @@ public:
 
     static Packet* generate_report(int type, IPAddress group_address, IGMPGroupMember* self);
 
-    static void send_report(Timer* timer, void* ptr);
+    // static send function, will be called by timers
+    static void send_change_report(Timer* timer, void* ptr);
+    static void send_general_report(Timer* timer, void* ptr);
+    static void send_group_specific_report(Timer* timer, void* ptr);
+
 
     struct ReportData {
         IGMPGroupMember* self;
@@ -43,12 +47,11 @@ public:
     };
 
 
-
 private:
-    HashTable<IPAddress, int> source_set;
-    Timer general_query_timer;
-    HashTable<IPAddress, Timer*> report_timers;
-
+    HashTable<IPAddress, int> source_set; // Connected to which servers?
+    Timer* general_timer = new Timer(); // Queries
+    HashTable<IPAddress, Timer*> report_timers; // Reports
+    HashTable<IPAddress, Timer*> group_specific_timers; // Group Specific queries
 
 };
 

@@ -3,6 +3,7 @@
 
 #define REPORT 0x22
 #define QUERY 0x11
+
 #define IN 1
 #define EX 2
 #define EX_TO_IN 3

@@ -6,24 +6,13 @@
 elementclass Client {
 	$address, $gateway |
 
-	igmp::IGMPGroupMember()
-
 	ip :: Strip(14)
 		-> CheckIPHeader()
 		-> rt :: StaticIPLookup(
 					$address:ip/32 0,
 					$address:ipnet 0,
-					224.0.0.0/4 2, // Multicast data
 					0.0.0.0/0.0.0.0 $gateway 1)
 		-> [1]output;
-
-	rt[2]
-	    -> classifier::IPClassifier(ip proto IGMP, -)
-    	-> [0]igmp
-    	-> Discard;
-
-    classifier[1] // Data
-        -> [1]output;
 
 	rt[1]
 		-> DropBroadcasts
@@ -33,12 +22,6 @@ elementclass Client {
 		-> frag :: IPFragmenter(1500)
 		-> arpq :: ARPQuerier($address)
 		-> output;
-
-    igmp[1] // Reports
-        -> IPEncap(2, $address, 224.0.0.22, TTL 1)
-        -> CheckIPHeader()
-        -> arpq;
-
 
 	ipgw[1] -> ICMPError($address, parameterproblem) -> output;
 	ttl[1]  -> ICMPError($address, timeexceeded) -> output;
