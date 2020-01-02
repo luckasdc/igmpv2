@@ -27,7 +27,7 @@ sleep 5
 
 # client32 leaves
 echo "$sclient32.leave $mcaddr" | telnet localhost $pclient32
-sleep 5
+sleep 20
 
 # client31 leaves
 echo "$sclient31.leave $mcaddr" | telnet localhost $pclient31

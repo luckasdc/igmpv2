@@ -19,18 +19,16 @@ list objects: *READ list*
 - [x] QRV Handler
 - [x] apply QRV while sending reports
 - [x] Do not reply instantly to queries, check 5.2
-- [ ] add group-specific reports
+- [x] add group-specific reports
 - [ ] add expired timer cheking (p 23 en 24)
+- [ ] Check timings (generated for delay)
 
-### TODO CLIENT
+### TODO ROUTER
 
 
 ### TODO GENERAL
 - [x] Proper solution for variables RV, URI, ...
 - [ ] Router Alert option
-- [ ] TODO IP header  checken 
-- [ ] TODO UDP header checken
-- [ ] TODO mss in click element steken ip
 - [ ] Check + TEST code for max resp time
 
 
