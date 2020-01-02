@@ -13,16 +13,17 @@ elementclass Client {
 		-> rt :: StaticIPLookup(
 					$address:ip/32 0,
 					$address:ipnet 0,
-					224.0.0.0/4 2, // Multicast data
+					224.0.0.0/4 2,
 					0.0.0.0/0.0.0.0 $gateway 1)
 		-> [1]output;
 
+
 	rt[2]
-	    -> classifier::IPClassifier(ip proto IGMP, -)
+	    -> IPClass::IPClassifier(ip proto IGMP, -)
     	-> [0]igmp
     	-> Discard;
 
-    classifier[1] // Data
+    IPClass[1]
         -> [1]output;
 
 	rt[1]
@@ -34,7 +35,7 @@ elementclass Client {
 		-> arpq :: ARPQuerier($address)
 		-> output;
 
-    igmp[1] // Reports
+    igmp[1]
         -> IPEncap(2, $address, 224.0.0.22, TTL 1)
         -> CheckIPHeader()
         -> arpq;

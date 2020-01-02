@@ -16,8 +16,8 @@
 #define RESPONSE_TO_QUERY 5 // internal usage only
 
 // TODO Fixed variables: a decent solution for these
-#define URI 2
-#define RV 2
+#define URI 1 // seconds
+#define RV 2  // times
 
 enum class report_record_type : uint8_t {
     m_include = 1,

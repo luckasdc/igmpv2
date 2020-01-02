@@ -7,6 +7,7 @@
 #include <clicknet/udp.h>
 #include "IGMPGroupMember.hh"
 #include "IGMPMessage.hh"
+#include <random>
 
 
 
@@ -50,22 +51,26 @@ void IGMPGroupMember::handle_query(Packet *p) {
     try {
         const MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
-        if (query->type == QUERY) {
+        if (query->type == QUERY) { // Todo cleanup this if if if's
 
             if (checkQuery(p)) {
                 //click_chatter("client igmp checksum is valid!");
                 Packet* packet = this->generate_report(RESPONSE_TO_QUERY, query->group_address, this);
                 if (packet != nullptr) { // Check if it is connected to at least one source
-                    click_chatter("packet genereated");
                     ReportData* report = new ReportData();
                     report->self = this;
                     report->generated_packet = packet;
-                    uint32_t delay = rand() % query->get_max_response_time() * 10^3; // ms -> sec
+                    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+                    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+                    std::uniform_int_distribution<> dist(0, query->get_max_response_time() * 100); // van centi naar miliseconden
+                    int delay = dist(gen);
+                    click_chatter("   RESPONSETO delay added (1st send): max resp ime %d", query->get_max_response_time());
+                    click_chatter("   RESPONSETO delay added (1st send): %d", delay);
 
                     // Send report based on the following rules:
 
                     // 1. Already a response scheduled, which departs before calculated delay? -> dont create new one
-                    if (this->general_timer->scheduled()) {
+                    if ( query->group_address.empty() && this->general_timer->scheduled()) {
                         click_chatter("Already a query scheduled. Calculating difference.");
                         auto difference = (this->general_timer->expiry() - Timestamp::now());
                         if ( delay < difference.msecval()) {
@@ -73,7 +78,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
                         }
                     }
                     // 2. If type is General query: cancel previous responses
-                    if (query->group_address.empty() && this->general_timer != nullptr) {
+                    if (query->group_address.empty()) {
                         click_chatter("Got a General Query, and will cancel previous ones");
                         if (this->general_timer->scheduled()) { // If theres a previous one, remove timer
                             this->general_timer->clear();
@@ -81,19 +86,34 @@ void IGMPGroupMember::handle_query(Packet *p) {
                         this->general_timer->assign(&IGMPGroupMember::send_general_report, report);
                         this->general_timer->initialize(this);
                         this->general_timer->schedule_after_msec(delay);
+                        return;
                     }
 
-                    // 3. If Group specific AND no pending previous ones, use group timers
-                    // TODO
-                    click_chatter("Todo: respond to group specific query");
+                    // 3. If Group specific && NO pending previous ones, use group timers
+                    if ( ! query->group_address.empty() && this->group_specific_timers[query->group_address] == this->group_specific_timers.default_value()) {
+                        click_chatter("Got a Group-Specifix Query, no previous one scheduled.");
+                        this->group_specific_timers[query->group_address] = new Timer(&IGMPGroupMember::send_group_specific_report, report);
+                        this->group_specific_timers[query->group_address]->initialize(this);
+                        this->group_specific_timers[query->group_address]->schedule_after_msec(delay);
+                        return;
+                    }
 
-                    // 4. TODO
-
+                    // 4. If Group specific && Another previous one, send the fastest of the two.
+                    if ( ! query->group_address.empty() && this->group_specific_timers[query->group_address] != this->group_specific_timers.default_value()) {
+                        click_chatter("Got a Group-Specific Query, but there's one scheduled.. ");
+                        auto difference = (this->general_timer->expiry() - Timestamp::now());
+                        this->group_specific_timers[query->group_address] = new Timer(&IGMPGroupMember::send_group_specific_report, report);
+                        this->group_specific_timers[query->group_address]->initialize(this);
+                        this->group_specific_timers[query->group_address]->schedule_after_msec(difference.msecval() + delay);
+                        return;
+                    }
+                    click_chatter("I shouldn't be here....");
                 }
             }
         }
     }
     catch (...) {
+        click_chatter("HOOOW JOH! DOE KE NORMAAL!");
         p->kill();
         return;
     }
@@ -127,7 +147,10 @@ int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk
 
     self->report_timers[group] = new Timer(&IGMPGroupMember::send_change_report, report);
     self->report_timers[group]->initialize(self);
-    uint32_t delay = rand() % URI * 10^3; // sec -> ms
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> dist(0, URI * 1000); // van sec naar miliseconden
+    int delay = dist(gen);
     click_chatter("delay added (1st send): %d", delay);
     self->report_timers[report->group_address]->schedule_after_msec(delay);
 
@@ -162,7 +185,10 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
 
     self->report_timers[group] = new Timer(&IGMPGroupMember::send_change_report, report);
     self->report_timers[group]->initialize(self);
-    uint32_t delay = rand() % URI * 10^3; // ms -> sec
+    std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+    std::uniform_int_distribution<> dist(0, URI * 1000); // van sec naar miliseconden
+    int delay = dist(gen);
     click_chatter("delay added (1st send): %d", delay);
     self->report_timers[report->group_address]->schedule_after_msec(delay);
     return 0;
@@ -233,7 +259,10 @@ void IGMPGroupMember::send_change_report(Timer* timer, void* ptr) {
     // Reschedule if it needs to be transmitted again
     if (report->retransmit_times > 1) {
 
-        uint32_t delay = rand() % URI * 10^3; // ms -> sec
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_int_distribution<> dist(0, URI * 1000); // van sec naar miliseconden
+        int delay = dist(gen);
         click_chatter("delay added (consecutive send): %d", delay);
 
         report->self->report_timers[report->group_address]->schedule_after_msec(delay);
@@ -251,6 +280,22 @@ void IGMPGroupMember::send_general_report(Timer *timer, void *ptr) {
     report->self->output(1).push(report->generated_packet->clone()->uniqueify());
     // Clear timer
     timer->clear();
+}
+
+void IGMPGroupMember::send_group_specific_report(Timer *timer, void *ptr) {
+    // Convert pointer back to report data struct
+    ReportData* report = (ReportData*) ptr;
+    // Send report
+    report->self->output(1).push(report->generated_packet->clone()->uniqueify());
+
+    if(! timer->scheduled()) {
+        // Clear timer
+        timer->clear();
+
+        // Destroy timer
+        report->self->group_specific_timers.erase(report->self->group_specific_timers.find(report->group_address));
+    }
+
 }
 
 CLICK_ENDDECLS
