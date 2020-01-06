@@ -4,11 +4,16 @@
 #include <click/element.hh>
 #include <click/timer.hh>
 #include <click/hashmap.hh>
+
+
+#include "defaults.hh"
 #include "IGMPRouterFilter.hh"
+
 
 CLICK_DECLS
 
 using namespace router;
+
 
 
 class IGMPRouter : public Element {
@@ -35,14 +40,14 @@ public:
 
     static void send_group_specific_query(Timer* timer, void* ptr);
 
-    int robustness_variable = 2;
-    int query_interval = 125;
-    int query_response = 100;
-    int last_member_query_count = 1;
-    int last_member_query_interval = 1;
-    int unsolicited_report_interval = 1;
+    int robustness_variable = defaults::robustness_variable;
+    int query_interval = defaults::query_interval;
+    int query_response = defaults::query_response;
+    int last_member_query_count = defaults::last_member_query_count;
+    int last_member_query_interval = defaults::last_member_query_interval;
+    int unsolicited_report_interval = defaults::unsolicited_report_interval;
 
-    bool other_querier;
+    bool other_querier = false;
 
     IPAddress _group_address;
 
@@ -50,8 +55,9 @@ public:
 
     inline int last_member_query_timer() { return last_member_query_count * last_member_query_interval; }
 
+    RouterState* state = new RouterState();
 
-private:
+    bool listening(IPAddress, IPAddress, int);
 
     void received_igmp(int port, Packet* p);
 
@@ -64,7 +70,6 @@ private:
     Timer general_query_timer;
     Timer other_querier_timer;
 
-    RouterState state;
 
 };
 

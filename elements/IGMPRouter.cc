@@ -4,16 +4,21 @@
 #include <click/packet.hh>
 #include <clicknet/ip.h>
 #include <clicknet/ether.h>
+#include <click/timer.hh>
 #include "IGMPMessage.hh"
 #include "IGMPRouter.hh"
-
+#include "IGMPRouterFilter.hh"
 
 
 
 CLICK_DECLS
 
+using namespace router;
+
 
 int IGMPRouter::initialize(ErrorHandler* errh) {
+    this->state = new RouterState();
+    if (this->robustness_variable <= 2) return -1;
     try {
         this->general_query_timer.initialize(this, true);
         this->general_query_timer.assign(IGMPRouter::send_general_query, this);
@@ -25,9 +30,23 @@ int IGMPRouter::initialize(ErrorHandler* errh) {
 }
 
 int IGMPRouter::configure(Vector <String> &conf, ErrorHandler* errh) {
-//    if (Args(conf, this, errh).read_m("MAXPACKETSIZE", maxSize).complete() < 0) return -1;
-//    if (maxSize <= 0) return errh->error("maxsize should be larger than 0");
+//    Args(conf, this, errh).read("ROBUSTNESS_VARIABLE", this->robustness_variable);
+//    if (this->robustness_variable <= 2) return errh->error("ROBUSTNESS_VARIABLE should be larger than 1");
     return 0;
+}
+
+bool IGMPRouter::listening(IPAddress multicast, IPAddress source, int interface) {
+    if (multicast == defaults::ipAddress) return true;
+    if (multicast == defaults::ipAddress2) return true;
+
+    auto it = this->state->group_states.find(interface);
+    if (it == this->state->group_states.end()) {
+        click_chatter("Router: interface doesn't exist in state.");
+        return false;
+    }
+    auto group_state = this->state->group_states[interface];
+
+    return group_state->listening(source);
 }
 
 void IGMPRouter::push(int port, Packet* p) {
@@ -40,19 +59,19 @@ void IGMPRouter::push(int port, Packet* p) {
             auto ip_h = (click_ip*) p->data();
             // this->filter.is_listening_to(ip_h->ip_dst, ip_h->ip_src)
             // IF the router listens to this stream send via port 1 else 2
-            if (1 == 1) {
-                //output(0).push(p);
+            if (listening(ip_h->ip_src, ip_h->ip_dst, 0)) {
+                output(0).push(p);
             } else {
-                output(2).push(p);
+                output(1).push(p);
             }
             break;
         }
-        // IGMP port 1
+            // IGMP port 1
         case 1: {
             this->received_igmp(port, p);
             break;
         }
-        // IGMP Port 2
+            // IGMP Port 2
         case 2: {
             this->received_igmp(port, p);
             break;
@@ -65,7 +84,7 @@ void IGMPRouter::push(int port, Packet* p) {
 }
 
 void IGMPRouter::received_igmp(int port, Packet* p) {
-    uint8_t* type = (uint8_t*) (p->data() + p->ip_header_length());
+    uint8_t* type = (uint8_t * )(p->data() + p->ip_header_length());
     // TODO VALIDATE
 
     // Check if report
@@ -95,6 +114,7 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
 
     auto result = report->get_group_records(p, n);
 
+
     click_chatter("Router:\tHandled Report. Size of records: %d", result.size());
     p->kill();
 }
@@ -106,8 +126,7 @@ void IGMPRouter::add_handlers() {
 WritablePacket* generate_general_query(IGMPRouter* router) {
     WritablePacket* packet = Packet::make(sizeof(click_ip) + sizeof(click_ether), nullptr, sizeof(MembershipQuery), 0);
     memset(packet->data(), 0, packet->length());
-
-    packet->set_dst_ip_anno(IPAddress("224.0.0.1"));
+    packet->set_dst_ip_anno(defaults::ipAddress);
     MembershipQuery* membership_query = (MembershipQuery*) (packet->data());
     membership_query->setup();
     membership_query->group_address = IPAddress(0);
@@ -118,9 +137,9 @@ WritablePacket* generate_general_query(IGMPRouter* router) {
 }
 
 void IGMPRouter::send_general_query(Timer* timer, void* ptr) {
+    click_chatter("Router: Sending General Query");
     IGMPRouter* router = (IGMPRouter*) ptr;
-    click_chatter("hello");
-    router->general_query_timer.reschedule_after_sec(10);
+    router->general_query_timer.reschedule_after_sec(router->query_interval);
     for (int i = 0; i < router->noutputs(); i++) {
         router->output(i).push(generate_general_query(router));
     }
@@ -129,12 +148,11 @@ void IGMPRouter::send_general_query(Timer* timer, void* ptr) {
 void IGMPRouter::send_other_query(Timer* timer, void* ptr) {
     auto router = (IGMPRouter*) ptr;
     router->other_querier = false;
-    router->general_query_timer.reschedule_after_sec(10);
+    router->general_query_timer.reschedule_after_sec(router->query_interval);
 }
 
 void IGMPRouter::send_group_specific_query(Timer* timer, void* ptr) {
     auto router = (IGMPRouter*) ptr;
-
     MembershipQuery query;
     query.setup();
     query.set_max_response_code(router->last_member_query_interval);
