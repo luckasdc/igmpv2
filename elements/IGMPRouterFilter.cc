@@ -204,3 +204,11 @@ bool RouterState::listening(IPAddress multicast, IPAddress source) {
 
     return group_state->listening(source);
 }
+
+void SourceRecord::remove() {
+    if(this->group_state == nullptr) delete this;
+    if(this->group_state->router_state == nullptr) delete this;
+    this->group_state->router_state->group_states[this->group_state->interface].source_records.erase(
+        this->source_address);
+    delete this;
+}

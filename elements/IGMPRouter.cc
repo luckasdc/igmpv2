@@ -36,8 +36,8 @@ int IGMPRouter::configure(Vector <String> &conf, ErrorHandler* errh) {
 }
 
 bool IGMPRouter::listening(IPAddress multicast, IPAddress source, int interface) {
-    if (multicast == defaults::ipAddress) return true;
-    if (multicast == defaults::ipAddress2) return true;
+    if (multicast == defaults::all_systems_multicast_address) return true;
+    if (multicast == defaults::report_address) return true;
 
     auto it = this->state->group_states.find(interface);
     if (it == this->state->group_states.end()) {
