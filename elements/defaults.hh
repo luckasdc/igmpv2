@@ -14,8 +14,8 @@ namespace defaults {
     const int unsolicited_report_interval = 1; // s
     const int startup_query_count = 2; // default: r_v
 
-    const IPAddress ipAddress = IPAddress("224.0.0.1");
-    const IPAddress ipAddress2 = IPAddress("224.0.0.22");
+    const IPAddress all_systems_multicast_address = IPAddress("224.0.0.1"); // ipAddress
+    const IPAddress report_address = IPAddress("224.0.0.22"); // ipAddress2
 }
 
 #endif //IGMP_DEFAULTS_HH

@@ -7,7 +7,6 @@
 #include <click/vector.hh>
 
 
-
 class GroupRecord;
 
 
@@ -19,6 +18,7 @@ enum class FilterMode : unsigned int {
 namespace router {
 
     struct GroupState;
+    struct RouterState;
 
 
     struct SourceRecord {
@@ -31,13 +31,18 @@ namespace router {
 
         void end_source_record_timer(SourceRecord* source_record);
 
+        void remove();
+
+
         SourceRecord(IPAddress source_address, uint timer_ms, GroupState* group_state);
 
     };
 
     struct GroupState {
+        RouterState* router_state;
         IPAddress multicast_address;
         Timer group_timer;
+        unsigned int interface;
         FilterMode filter_mode = FilterMode::INCLUDE;
 
         HashTable<IPAddress, SourceRecord*> source_records;
@@ -52,7 +57,7 @@ namespace router {
 
         void reception_current_record(GroupRecord* group_record);
 
-        Vector<IPAddress> get_excluded_addresses() const {
+        Vector <IPAddress> get_excluded_addresses() const {
             Vector <IPAddress> output;
             for (const auto &kv:this->source_records) {
                 auto source_record = kv.second;

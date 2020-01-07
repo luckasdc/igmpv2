@@ -40,13 +40,9 @@ namespace util {
 }
 
 
-
-
 struct MembershipQuery {
     uint8_t type; // 0x11
-private:
     uint8_t max_resp_code = 0;
-public:
     uint16_t checksum;
     IPAddress group_address;
     uint8_t resv : 4;
@@ -78,9 +74,16 @@ public:
         return code2value(this->max_resp_code);
     }
 
-
     void set_max_response_code(unsigned int max_reponse_time) {
         this->max_resp_code = value2code(max_reponse_time);
+    }
+
+    unsigned int get_query_interval_time() const {
+        return code2value(this->qqic);
+    }
+
+    void set_query_interval_code(unsigned int time) {
+        this->qqic = value2code(time);
     }
 
     void setup() {
@@ -99,7 +102,7 @@ struct GroupRecord {
     IPAddress multicast_address;
     // Vector<IPAddress> source_addresses;
 
-    // TODO: error
+//     TODO: error
     Vector <IPAddress> get_source_addresses() {
         Vector <IPAddress> output;
         auto start = this + sizeof(GroupRecord);
@@ -110,7 +113,6 @@ struct GroupRecord {
         }
         return output;
     }
-
 };
 
 
