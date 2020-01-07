@@ -192,8 +192,8 @@ bool GroupState::listening(IPAddress source) {
 
 
 bool RouterState::listening(IPAddress multicast, IPAddress source) {
-    if (multicast == defaults::ipAddress) return true;
-    if (multicast == defaults::ipAddress2) return true;
+    if (multicast == defaults::all_systems_multicast_address) return true;
+    if (multicast == defaults::report_address) return true;
 
     auto it = this->group_states.find(0);
     if (it == this->group_states.end()) {

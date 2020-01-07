@@ -126,7 +126,7 @@ void IGMPRouter::add_handlers() {
 WritablePacket* generate_general_query(IGMPRouter* router) {
     WritablePacket* packet = Packet::make(sizeof(click_ip) + sizeof(click_ether), nullptr, sizeof(MembershipQuery), 0);
     memset(packet->data(), 0, packet->length());
-    packet->set_dst_ip_anno(defaults::ipAddress);
+    packet->set_dst_ip_anno(defaults::all_systems_multicast_address);
     MembershipQuery* membership_query = (MembershipQuery*) (packet->data());
     membership_query->setup();
     membership_query->group_address = IPAddress(0);
