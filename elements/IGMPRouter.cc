@@ -54,15 +54,15 @@ void IGMPRouter::push(int port, Packet* p) {
         case 0: {
             IPAddress source = p->ip_header()->ip_src;
             IPAddress destination = p->ip_header()->ip_dst;
+            // Paint the packet with color 0 so it gets forward to the right place
+            p->set_anno_u8(PAINT_ANNO_OFFSET, 0);
 
             // this->filter.is_listening_to(ip_h->ip_dst, ip_h->ip_src)
             // IF the router listens to this stream send via port 1 else 2
             if (this->state->listening(destination, source, 1)) {
-                p->set_anno_u8(PAINT_ANNO_OFFSET, 0);
-                output(1).push(p);
+                output(1).push(p->clone()->uniqueify());
             } if (this->state->listening(destination, source, 2)) {
-                p->set_anno_u8(PAINT_ANNO_OFFSET, 0);
-                output(2).push(p);
+                output(2).push(p->clone()->uniqueify());
             } else {
                 p->kill();
             }
@@ -119,7 +119,7 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
 
     for (int i = 0; i < n; i++) {
         // zoek in table naar de group state
-        click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
+        click_chatter(" - A group record: %s on port %d", records[i]->multicast_address.unparse().c_str(), port);
         this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
     }
 
@@ -141,6 +141,7 @@ WritablePacket* generate_general_query(IGMPRouter* router) {
     membership_query->qrv = router->robustness_variable;
     membership_query->checksum = 0;
     membership_query->checksum = click_in_cksum(packet->data(), packet->length());
+    // Paint the packet with color 1 so it gets forward to the right place
     packet->set_anno_u8(PAINT_ANNO_OFFSET, 1);
     return packet;
 }
