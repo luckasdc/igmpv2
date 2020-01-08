@@ -61,6 +61,8 @@ public:
 
     void received_igmp_report(int port, Packet* p);
 
+    bool checkQuery(Packet*p);
+
     uint32_t maxSize;
 
     Timer general_query_timer;
