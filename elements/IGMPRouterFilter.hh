@@ -59,26 +59,26 @@ namespace router {
 
 //        void reception_current_record(GroupRecord* group_record, int);
 
-//        Vector <IPAddress> get_excluded_addresses() const {
-//            Vector <IPAddress> output;
-//            for (const auto &kv:this->source_records) {
-//                auto source_record = kv.second;
-//                if (source_record->finished) {
-//                    output.push_back(source_record->source_address);
-//                }
-//            }
-//            return output;
-//        }
+        Vector <IPAddress> get_excluded_addresses() const {
+            Vector <IPAddress> output;
+            for (const auto &kv:this->source_records) {
+                auto source_record = kv.second;
+                if (source_record->finished) {
+                    output.push_back(source_record->source_address);
+                }
+            }
+            return output;
+        }
 
         GroupState(IPAddress multicast_address, FilterMode filter_mode, uint timer_ms);
 
     };
 
     struct RouterState {
-        HashTable<int, GroupState*> group_states;
+        Vector<GroupState*> group_states;
 
 
-        bool listening(IPAddress, IPAddress);
+        bool listening(IPAddress, IPAddress, int);
     };
 
 }

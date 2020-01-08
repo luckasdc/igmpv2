@@ -8,7 +8,6 @@
 #include "defaults.hh"
 
 
-
 CLICK_DECLS
 
 using namespace router;
@@ -192,19 +191,16 @@ bool GroupState::listening(IPAddress source) {
 }
 
 
-bool RouterState::listening(IPAddress multicast, IPAddress source) {
-//    if (multicast == defaults::all_systems_multicast_address) return true;
-//    if (multicast == defaults::report_address) return true;
-//
-//    auto it = this->group_states.find(0);
-//    if (it == this->group_states.end()) {
-//        click_chatter("Router State: interface doesn't exist in state.")
-//        return false;
-//    }
-//    auto group_state = (GroupState*) (it);
-//
-//    return group_state->listening(source);
-    return true;
+bool RouterState::listening(IPAddress multicast, IPAddress source, int interface) {
+    if (multicast == defaults::all_systems_multicast_address) return true;
+    if (multicast == defaults::report_address) return true;
+
+    auto it = this->group_states;
+    if (this->get_group(interface, multicast) != nullptr) {
+        return true;
+    }
+    click_chatter("Router State: interface doesn't exist in state.")
+    return false;
 }
 
 void SourceRecord::remove() {
