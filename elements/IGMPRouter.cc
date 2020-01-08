@@ -18,7 +18,7 @@ using namespace router;
 
 int IGMPRouter::initialize(ErrorHandler* errh) {
     this->state = new RouterState();
-    if (this->robustness_variable <= 2) return -1;
+    if (this->robustness_variable < 2) return -1;
     try {
         this->general_query_timer.initialize(this, true);
         this->general_query_timer.assign(IGMPRouter::send_general_query, this);
@@ -29,24 +29,18 @@ int IGMPRouter::initialize(ErrorHandler* errh) {
     return 0;
 }
 
-int IGMPRouter::configure(Vector <String> &conf, ErrorHandler* errh) {
-//    Args(conf, this, errh).read("ROBUSTNESS_VARIABLE", this->robustness_variable);
-//    if (this->robustness_variable <= 2) return errh->error("ROBUSTNESS_VARIABLE should be larger than 1");
-    return 0;
-}
-
 bool IGMPRouter::listening(IPAddress multicast, IPAddress source, int interface) {
-    if (multicast == defaults::all_systems_multicast_address) return true;
-    if (multicast == defaults::report_address) return true;
-
-    auto it = this->state->group_states.find(interface);
-    if (it == this->state->group_states.end()) {
-        click_chatter("Router: interface doesn't exist in state.");
-        return false;
-    }
-    auto group_state = this->state->group_states[interface];
-
-    return group_state->listening(source);
+//    if (multicast == defaults::all_systems_multicast_address) return true;
+//    if (multicast == defaults::report_address) return true;
+//
+//    auto it = this->state->group_states.find(interface);
+//    if (it == this->state->group_states.end()) {
+//        click_chatter("Router: interface doesn't exist in state.");
+//        return false;
+//    }
+//    auto group_state = this->state->group_states[interface];
+//
+//    return group_state->listening(source);
 }
 
 void IGMPRouter::push(int port, Packet* p) {
@@ -105,17 +99,23 @@ void IGMPRouter::received_igmp_query(int port, Packet* p) {
 }
 
 void IGMPRouter::received_igmp_report(int port, Packet* p) {
-    click_chatter("Router:\tReceived IGMP Report");
+
+    // TODO try catch zoals client
+    IPAddress source = p->ip_header()->ip_src;
+
     // make report
     MembershipReport* report = (MembershipReport*) (p->data() + p->ip_header_length());
-
     // get group records
     uint16_t n = ntohs(report->n_group_records);
+    auto records = report->get_group_records(p, n);
 
-    auto result = report->get_group_records(p, n);
+    for (int i = 0; i < n; i++) {
+        // zoek in table naar de group state
+        click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
+        this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+    }
 
-
-    click_chatter("Router:\tHandled Report. Size of records: %d", result.size());
+    click_chatter("Router:\tHandled Report. Size of records: %d", records.size());
     p->kill();
 }
 

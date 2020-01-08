@@ -28,8 +28,6 @@ public:
 
     void add_handlers();
 
-    int configure(Vector <String> &, ErrorHandler*);
-
     void push(int, Packet*);
 
     static void send_general_query(Timer* timer, void* ptr);
@@ -53,7 +51,7 @@ public:
 
     inline int last_member_query_timer() { return last_member_query_count * last_member_query_interval; }
 
-    RouterState* state = new RouterState();
+    RouterState* state;
 
     bool listening(IPAddress, IPAddress, int);
 

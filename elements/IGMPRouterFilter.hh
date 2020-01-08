@@ -24,23 +24,23 @@ namespace router {
 
 
     struct SourceRecord {
+
+        SourceRecord(IPAddress source_address, GroupState* group_state);
+
         GroupState* group_state; // pointer
         IPAddress source_address = IPAddress(0);
         Timer* timer;
         bool finished = false;
 
         static void start_source_record_timer(Timer* timer, void* data);
-
         void end_source_record_timer(SourceRecord* source_record);
-
         void remove();
-
-
-        SourceRecord(IPAddress source_address, uint timer_ms, GroupState* group_state);
-
     };
 
     struct GroupState {
+        //Constructor
+        GroupState(int interface, IPAddress multicast_address);
+
         RouterState* router_state;
         IPAddress multicast_address = IPAddress(0);
         Timer* group_timer;
@@ -57,6 +57,8 @@ namespace router {
 
         bool listening(IPAddress);
 
+        void start_listening(IPAddress client);
+
 //        void reception_current_record(GroupRecord* group_record, int);
 
         Vector <IPAddress> get_excluded_addresses() const {
@@ -70,15 +72,15 @@ namespace router {
             return output;
         }
 
-        GroupState(IPAddress multicast_address, FilterMode filter_mode, uint timer_ms);
 
     };
 
     struct RouterState {
         Vector<GroupState*> group_states;
 
-
-        bool listening(IPAddress, IPAddress, int);
+        GroupState* get_group(int port, IPAddress server);
+        bool find_insert_group_state(int port, IPAddress client, IPAddress server);
+        bool listening(IPAddress server, IPAddress source, int);
     };
 
 }
