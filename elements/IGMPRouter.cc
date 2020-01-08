@@ -59,7 +59,7 @@ void IGMPRouter::push(int port, Packet* p) {
             auto ip_h = (click_ip*) p->data();
             // this->filter.is_listening_to(ip_h->ip_dst, ip_h->ip_src)
             // IF the router listens to this stream send via port 1 else 2
-            if (listening(ip_h->ip_src, ip_h->ip_dst, 0)) {
+            if (this->state->listening(ip_h->ip_src, ip_h->ip_dst, 0)) {
                 output(0).push(p);
             } else {
                 output(1).push(p);
