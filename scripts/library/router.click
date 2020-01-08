@@ -50,7 +50,6 @@ elementclass Router {
 	    -> [1]server_arpq;
 
 	server_class[2]
-	    -> Paint(1)
 	    -> [0] igmp; // Send udp data directly to igmp
 
 
@@ -152,14 +151,37 @@ elementclass Router {
 	client2_frag[1]  -> ICMPError($client2_address, unreachable, needfrag) -> rt;
 
     igmp[0]
+        -> ps0::PaintSwitch();
+
+    ps0[0]
+        ->[0]output;
+
+    ps0[1]
         -> IPEncap(2, $server_address, DST DST_ANNO, TTL 1)
-        -> server_arpq
+        -> server_arpq;
+
+
 
     igmp[1]
+        -> ps1::PaintSwitch;
+
+    ps1[0]
+        ->[1]output;
+
+    ps1[1]
         -> IPEncap(2, $client1_address, DST DST_ANNO, TTL 1)
-        -> client1_arpq
+        -> client1_arpq;
+
+
+
 
     igmp[2]
-        -> IPEncap(2, $client2_address, DST DST_ANNO, TTL 1)
-        -> client2_arpq
+        -> ps2::PaintSwitch;
+
+    ps2[0]
+         ->[2]output;
+
+    ps2[1]
+         -> IPEncap(2, $client2_address, DST DST_ANNO, TTL 1)
+         ->client2_arpq;
 }

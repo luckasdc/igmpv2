@@ -204,13 +204,15 @@ void GroupState::start_listening(IPAddress client) {
 
 
 bool RouterState::listening(IPAddress multicast, IPAddress source, int interface) {
-    if (multicast == defaults::all_systems_multicast_address) return true;
-    if (multicast == defaults::report_address) return true;
+    //if (multicast == defaults::all_systems_multicast_address) return true;
+    //if (multicast == defaults::report_address) return true;
+    click_chatter("listening to group on interface %d, mc %s ", interface, multicast.unparse().c_str());
+
 
     if (this->get_group(interface, multicast) != nullptr) {
         return true;
     }
-    click_chatter("Router State: interface doesn't exist in state.")
+    click_chatter("Router State: interface doesn't exist in state.");
     return false;
 }
 
@@ -226,14 +228,17 @@ GroupState* RouterState::get_group(int interface, IPAddress server) {
 
 bool RouterState::find_insert_group_state(int port, IPAddress client, IPAddress server) {
 
+
     if (this->get_group(port, server) == nullptr) {
         // Group doesn't exist yet. Creating new Group.
         this->group_states.push_back(new GroupState(port, server));
         this->group_states.back()->start_listening(client);
+
         return true;
     }
     GroupState* group_state = this->get_group(port, server);
     group_state->start_listening(client);
+
     return true;
 }
 

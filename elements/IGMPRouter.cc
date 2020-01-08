@@ -8,6 +8,8 @@
 #include "IGMPMessage.hh"
 #include "IGMPRouter.hh"
 #include "IGMPRouterFilter.hh"
+#include <click/packet_anno.hh>
+
 
 
 
@@ -50,13 +52,19 @@ void IGMPRouter::push(int port, Packet* p) {
     switch (port) {
         // packets from server
         case 0: {
-            auto ip_h = (click_ip*) p->data();
+            IPAddress source = p->ip_header()->ip_src;
+            IPAddress destination = p->ip_header()->ip_dst;
+
             // this->filter.is_listening_to(ip_h->ip_dst, ip_h->ip_src)
             // IF the router listens to this stream send via port 1 else 2
-            if (this->state->listening(ip_h->ip_src, ip_h->ip_dst, 0)) {
-                output(0).push(p);
-            } else {
+            if (this->state->listening(destination, source, 1)) {
+                p->set_anno_u8(PAINT_ANNO_OFFSET, 0);
                 output(1).push(p);
+            } if (this->state->listening(destination, source, 2)) {
+                p->set_anno_u8(PAINT_ANNO_OFFSET, 0);
+                output(2).push(p);
+            } else {
+                p->kill();
             }
             break;
         }
@@ -133,6 +141,7 @@ WritablePacket* generate_general_query(IGMPRouter* router) {
     membership_query->qrv = router->robustness_variable;
     membership_query->checksum = 0;
     membership_query->checksum = click_in_cksum(packet->data(), packet->length());
+    packet->set_anno_u8(PAINT_ANNO_OFFSET, 1);
     return packet;
 }
 
