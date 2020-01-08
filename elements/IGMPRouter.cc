@@ -11,8 +11,6 @@
 #include <click/packet_anno.hh>
 
 
-
-
 CLICK_DECLS
 
 using namespace router;
@@ -61,7 +59,8 @@ void IGMPRouter::push(int port, Packet* p) {
             // IF the router listens to this stream send via port 1 else 2
             if (this->state->listening(destination, source, 1)) {
                 output(1).push(p->clone()->uniqueify());
-            } if (this->state->listening(destination, source, 2)) {
+            }
+            if (this->state->listening(destination, source, 2)) {
                 output(2).push(p->clone()->uniqueify());
             } else {
                 p->kill();
@@ -103,7 +102,96 @@ void IGMPRouter::received_igmp(int port, Packet* p) {
 
 void IGMPRouter::received_igmp_query(int port, Packet* p) {
     click_chatter("Router:\tReceived IGMP Query");
-    // Pass effkes
+
+
+
+
+    // setup group specific timers
+
+    // als er een timer is laat timer staan
+
+
+
+}
+
+
+WritablePacket* generate_leave_query(IGMPRouter* router, int interface, IPAddress multicast) {
+    WritablePacket* packet = Packet::make(sizeof(click_ip) + sizeof(click_ether), nullptr, sizeof(MembershipQuery), 0);
+    memset(packet->data(), 0, packet->length());
+    packet->set_dst_ip_anno(multicast);
+    MembershipQuery* membership_query = (MembershipQuery*) (packet->data());
+    membership_query->setup();
+    membership_query->group_address = multicast;
+    membership_query->qrv = router->robustness_variable;
+    membership_query->set_query_interval_code(router->last_member_query_interval / 10);
+    membership_query->set_max_response_code(router->last_member_query_interval);
+    membership_query->checksum = 0;
+    membership_query->checksum = click_in_cksum(packet->data(), packet->length());
+    packet->set_anno_u8(PAINT_ANNO_OFFSET, 1);
+    return packet;
+}
+
+struct LeaveBlob {
+    IGMPRouter* router;
+    IPAddress multicast;
+    int last_member_query_count; // hoeveel nog versturen
+    int interface;
+    unsigned int time_schedule; // na hoeveel tijd terug versturen (in ms)
+
+    LeaveBlob(IGMPRouter* router, IPAddress multicast, int last_member_query_count, int interface,
+              unsigned int time) : router(
+        router), multicast(multicast), last_member_query_count(last_member_query_count), interface(interface),
+                                   time_schedule(time) {}
+};
+
+
+void IGMPRouter::send_specific_query(Timer* timer, void* pVoid) {
+    auto blob = (LeaveBlob*) pVoid;
+    blob->last_member_query_count -= 1;
+    click_chatter("LMQC: %d", blob->last_member_query_count);
+    if (blob->last_member_query_count >= 0) {
+        auto packet = generate_leave_query(blob->router, blob->interface, blob->multicast);
+        blob->router->output(blob->interface).push(packet);
+        timer->reschedule_after_ms(blob->time_schedule);
+    } else {
+        delete timer;
+    }
+}
+
+void IGMPRouter::delete_group(Timer* timer, void* pVoid) {
+    auto group_state = (GroupState*) pVoid;
+    group_state->group_timer = nullptr;
+    delete timer;
+    click_chatter("lol");
+    if (not group_state->has_replied) {
+        // Didn't replied
+        group_state->router_state->delete_group(group_state);
+        delete group_state;
+    }
+}
+
+
+void IGMPRouter::set_leave_timers(int interface, IPAddress source, IPAddress multicast) {
+    GroupState* group_state = this->state->get_group(interface, multicast);
+    click_chatter("lolololol");
+
+
+    // Check if timer is already set
+    if (group_state->group_timer != nullptr) return;
+    group_state->has_replied = false;
+
+    // Group Timer
+    group_state->group_timer = new Timer(IGMPRouter::delete_group, group_state);
+    group_state->group_timer->initialize(this);
+    click_chatter("Will delete after %d", this->last_member_query_timer());
+    group_state->group_timer->schedule_after_sec(this->last_member_query_timer()/10); //ds
+
+    unsigned int time_schedule_query = 100 * last_member_query_interval;
+    auto blob = new LeaveBlob(this, multicast, this->last_member_query_count, interface, time_schedule_query);
+    Timer* query_timer = new Timer(IGMPRouter::send_specific_query, blob);
+    query_timer->initialize(this);
+    query_timer->schedule_now();
+    return;
 }
 
 void IGMPRouter::received_igmp_report(int port, Packet* p) {
@@ -119,8 +207,26 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
 
     for (int i = 0; i < n; i++) {
         // zoek in table naar de group state
-        click_chatter(" - A group record: %s on port %d", records[i]->multicast_address.unparse().c_str(), port);
-        this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+
+        click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
+        switch (records[i]->record_type) {
+            case IN_TO_EX: {
+                this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+                break;
+            }
+            case EX_TO_IN: {
+                this->set_leave_timers(port, source, records[i]->multicast_address);
+                break;
+            }
+            case IN: {
+                break;
+                // NADA
+            }
+            case EX: {
+                this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+                break;
+            }
+        }
     }
 
     click_chatter("Router:\tHandled Report. Size of records: %d", records.size());
@@ -172,7 +278,7 @@ void IGMPRouter::send_group_specific_query(Timer* timer, void* ptr) {
 }
 
 
-
 CLICK_ENDDECLS
 ELEMENT_REQUIRES(IGMPRouterFilter)
+
 EXPORT_ELEMENT(IGMPRouter)

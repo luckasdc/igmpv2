@@ -3,6 +3,7 @@
 //
 
 #include <click/config.h>
+#include <algorithm>
 #include "IGMPRouterFilter.hh"
 #include "IGMPMessage.hh"
 #include "defaults.hh"
@@ -84,13 +85,15 @@ SourceRecord::SourceRecord(IPAddress source_address, router::GroupState* group_s
     this->source_address = source_address;
     this->group_state = group_state;
 
-//    this->timer = Timer(GroupState::start_source_record_timer, this);
-//    this->timer.timer.schedule_after_msec(timer_ms);
+//    delete this->timer;
+//    this->timer = new Timer(GroupState::start_source_record_timer, this);
+//    this->timer->schedule_after_msec(timer_ms);
 }
 
-GroupState::GroupState(int interface, IPAddress multicast_address) {
+GroupState::GroupState(int interface, IPAddress multicast_address, RouterState* routerState) {
     this->multicast_address = multicast_address;
     this->interface = interface;
+    this->router_state = routerState;
 }
 
 void GroupState::start_group_timer(Timer* timer, void* data) {
@@ -110,86 +113,6 @@ void SourceRecord::end_source_record_timer(router::SourceRecord* source_record) 
 }
 
 
-//void GroupState::reception_current_record(GroupRecord* group_record, int GMI) {
-//    auto original_source_records = this->source_records;
-//    if (this->filter_mode == FilterMode::INCLUDE) {
-//        if (group_record->record_type == FilterMode::INCLUDE) {
-//            // INCLUDE INCLUDE
-//            for (auto source_address:group_record->get_source_addresses()) {
-//                auto it = original_source_records.find(source_address);
-//                if (it != this->source_records.end()) {
-//                    delete this->source_records[source_address];
-//                }
-//                this->source_records[source_address] = new SourceRecord(source_address, GMI, this);
-//            }
-//        } else {
-//            // INCLUDE EXCLUDE
-//            group_record->record_type == FilterMode::EXCLUDE;
-//
-//            // B-A
-//            // (B-A)=0
-//            for (auto source_address:group_record->get_source_addresses()) {
-//                auto it = original_source_records.find(source_address);
-//                if (it != this->source_records.end()) {
-//                    this->source_records[source_address].timer.clear();
-//                    this->source_records[source_address].finished = true;
-//                }
-//            }
-//
-//            // A*B
-//            // Delete (A-B)
-//            for (const auto &kv:original_source_records) {
-//                auto source_address = kv.second->source_address;
-//                if (not group_record->get_source_addresses().find(source_address)) {
-//                    this->source_records.erase(kv.first);
-//                }
-//            }
-//
-//            // Group Timer=GMI
-//            this->group_timer.scedule_after_msec(GMI);
-//        }
-//    } else {
-//        if (group_record->record_type == FilterMode::INCLUDE) {
-//            // EXCLUDE INCLUDE
-//
-//            // Y-A
-//            for (auto source_address:group_record->get_source_addresses()) {
-//                auto it = original_source_records.find(source_address);
-//                if (it != this->source_records.end()) {
-//                    this->source_records[source_address].timer.clear();
-//                    this->source_records[source_address].finished = true;
-//                }
-//            }
-//
-//        } else {
-//            // EXCLUDE EXCLUDE
-//        }
-//
-//    }
-
-
-//}
-
-
-
-bool GroupState::listening(IPAddress source) {
-//    try {
-//
-//        switch (this->filter_mode) {
-//            case FilterMode::INCLUDE :
-//                return this->source_records.find(source) != this->source_records.end();
-//            case FilterMode::EXCLUDE: {
-//                return this->addresses.find(source) == this->addresses.end();
-//            }
-//            default:
-//                return false;
-//        }
-//    } catch (...) {
-//        return false;
-//    }
-    return true;
-}
-
 void GroupState::start_listening(IPAddress client) {
     // Mark that group must keep on serving
 
@@ -199,7 +122,7 @@ void GroupState::start_listening(IPAddress client) {
         this->source_records.find_insert(client, new SourceRecord(client, this));
         return;
     }
-
+    this->has_replied = true;
 }
 
 
@@ -219,7 +142,7 @@ bool RouterState::listening(IPAddress multicast, IPAddress source, int interface
 
 GroupState* RouterState::get_group(int interface, IPAddress server) {
     for (GroupState* group : this->group_states) {
-        if (group->multicast_address == server and group->interface == interface) {
+        if (group->multicast_address == server and group->interface == interface and group->router_state == this) {
             return group;
         }
     }
@@ -228,10 +151,9 @@ GroupState* RouterState::get_group(int interface, IPAddress server) {
 
 bool RouterState::find_insert_group_state(int port, IPAddress client, IPAddress server) {
 
-
     if (this->get_group(port, server) == nullptr) {
         // Group doesn't exist yet. Creating new Group.
-        this->group_states.push_back(new GroupState(port, server));
+        this->group_states.push_back(new GroupState(port, server, this));
         this->group_states.back()->start_listening(client);
 
         return true;
@@ -242,12 +164,17 @@ bool RouterState::find_insert_group_state(int port, IPAddress client, IPAddress 
     return true;
 }
 
+void RouterState::delete_group(GroupState* group_state) {
+    click_chatter("Erasing 0");
+    group_state->router_state = nullptr;
+}
+
 void SourceRecord::remove() {
-//    if(this->group_state == nullptr) delete this;
-//    if(this->group_state->router_state == nullptr) delete this;
-//    this->group_state->router_state->group_states[this->group_state->interface].source_records.erase(
-//        this->source_address);
-//    delete this;
+    if (this->group_state == nullptr) delete this;
+    if (this->group_state->router_state == nullptr) delete this;
+    this->group_state->source_records.erase(
+        this->source_address);
+    delete this;
 }
 
 CLICK_ENDDECLS

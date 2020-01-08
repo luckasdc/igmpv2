@@ -86,6 +86,17 @@ struct MembershipQuery {
         this->qqic = value2code(time);
     }
 
+    Vector <IPAddress> get_source_addresses() {
+        Vector <IPAddress> output;
+        auto start = this + sizeof(MembershipQuery);
+        for (int j = 0; j < this->n_sources; j++) {
+            uint32_t data = *(uint32_t * )(start + (j * sizeof(IPAddress)));
+            IPAddress ip = IPAddress(data);
+            output.push_back(ip);
+        }
+        return output;
+    }
+
     void setup() {
         this->type = QUERY;
         this->n_sources = htons(0);
@@ -102,7 +113,6 @@ struct GroupRecord {
     IPAddress multicast_address;
     // Vector<IPAddress> source_addresses;
 
-//     TODO: error
     Vector <IPAddress> get_source_addresses() {
         Vector <IPAddress> output;
         auto start = this + sizeof(GroupRecord);

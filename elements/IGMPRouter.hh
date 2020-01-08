@@ -61,6 +61,11 @@ public:
 
     void received_igmp_report(int port, Packet* p);
 
+    void set_leave_timers(int, IPAddress, IPAddress);
+
+    static void send_specific_query(Timer*,void*);
+    static void delete_group(Timer*,void*);
+
     uint32_t maxSize;
 
     Timer general_query_timer;
