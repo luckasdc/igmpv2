@@ -4,8 +4,6 @@
 #include <click/element.hh>
 #include <click/timer.hh>
 #include <click/hashmap.hh>
-
-
 #include "defaults.hh"
 #include "IGMPRouterFilter.hh"
 

@@ -161,5 +161,8 @@ void IGMPRouter::send_group_specific_query(Timer* timer, void* ptr) {
 
 }
 
+
+
 CLICK_ENDDECLS
+ELEMENT_REQUIRES(IGMPRouterFilter)
 EXPORT_ELEMENT(IGMPRouter)
