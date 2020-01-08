@@ -195,7 +195,6 @@ bool RouterState::listening(IPAddress multicast, IPAddress source, int interface
     if (multicast == defaults::all_systems_multicast_address) return true;
     if (multicast == defaults::report_address) return true;
 
-    auto it = this->group_states;
     if (this->get_group(interface, multicast) != nullptr) {
         return true;
     }
