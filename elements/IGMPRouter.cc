@@ -179,13 +179,8 @@ void IGMPRouter::send_group_specific_query(Timer* timer, void* ptr) {
 }
 
 bool IGMPRouter::checkQuery(Packet *p) {
-
     // TODO IP header  checken
-    // TODO UDP header checken
-
     MembershipReport* report = (MembershipReport*) (p->data() + p->ip_header_length());
-
-    //if (p->length() - p->ip_header_length() > sizeof(query)) { return false; }
 
     // One's complement of total payload is done by adding the bitwise operator & 0xFFFF
     // must be equal to 0

@@ -3,6 +3,8 @@
 #include <click/element.hh>
 #include <click/hashtable.hh>
 #include <click/timer.hh>
+#include "defaults.hh"
+
 
 
 CLICK_DECLS
