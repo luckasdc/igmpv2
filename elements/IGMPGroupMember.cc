@@ -9,8 +9,6 @@
 #include "IGMPMessage.hh"
 #include <random>
 
-
-
 CLICK_DECLS
 IGMPGroupMember::IGMPGroupMember()
 {}
@@ -20,13 +18,8 @@ IGMPGroupMember::~ IGMPGroupMember()
 
 
 bool checkQuery(Packet* p) {
-
     // TODO IP header  checken
-    // TODO UDP header checken
-    // TODO mss in click element steken ip
     MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
-
-    //if (p->length() - p->ip_header_length() > sizeof(query)) { return false; }
 
     // One's complement of total payload is done by adding the bitwise operator & 0xFFFF
     // must be equal to 0
@@ -40,10 +33,8 @@ int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
 }
 
 void IGMPGroupMember::push(int port, Packet *p){
-    click_chatter("Got a packet of size %d on input %d", p->length(), port);
     if (port == 0) { handle_query(p); }
     else { p->kill(); }
-
 }
 
 void IGMPGroupMember::handle_query(Packet *p) {
@@ -51,10 +42,10 @@ void IGMPGroupMember::handle_query(Packet *p) {
     try {
         const MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
-        if (query->type == QUERY) { // Todo cleanup this if if if's
+        if (query->type == QUERY) {
 
             if (checkQuery(p)) {
-                //click_chatter("client igmp checksum is valid!");
+                //click_chatter("CLIENT: client igmp checksum is valid!");
                 Packet* packet = this->generate_report(RESPONSE_TO_QUERY, query->group_address, this);
                 if (packet != nullptr) { // Check if it is connected to at least one source
                     ReportData* report = new ReportData();
@@ -64,14 +55,14 @@ void IGMPGroupMember::handle_query(Packet *p) {
                     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
                     std::uniform_int_distribution<> dist(0, query->get_max_response_time() * 100); // van centi naar miliseconden
                     int delay = dist(gen);
-                    click_chatter("   RESPONSETO delay added (1st send): max resp ime %d", query->get_max_response_time());
-                    click_chatter("   RESPONSETO delay added (1st send): %d", delay);
+                    //click_chatter("CLIENT:    RESPONSETO delay added (1st send): max resp ime %d", query->get_max_response_time());
+                    //click_chatter("CLIENT:    RESPONSETO delay added (1st send): %d", delay);
 
                     // Send report based on the following rules:
 
                     // 1. Already a response scheduled, which departs before calculated delay? -> dont create new one
                     if ( query->group_address.empty() && this->general_timer->scheduled()) {
-                        click_chatter("Already a query scheduled. Calculating difference.");
+                        click_chatter("CLIENT: Already a query scheduled. Calculating difference.");
                         auto difference = (this->general_timer->expiry() - Timestamp::now());
                         if ( delay < difference.msecval()) {
                             return;
@@ -79,7 +70,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
                     }
                     // 2. If type is General query: cancel previous responses
                     if (query->group_address.empty()) {
-                        click_chatter("Got a General Query, and will cancel previous ones");
+                        click_chatter("CLIENT: Got a General Query, and will cancel previous ones");
                         if (this->general_timer->scheduled()) { // If theres a previous one, remove timer
                             this->general_timer->clear();
                         }
@@ -91,7 +82,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
 
                     // 3. If Group specific && NO pending previous ones, use group timers
                     if ( ! query->group_address.empty() && this->group_specific_timers[query->group_address] == this->group_specific_timers.default_value()) {
-                        click_chatter("Got a Group-Specifix Query, no previous one scheduled.");
+                        click_chatter("CLIENT: Got a Group-Specifix Query, no previous one scheduled.");
                         this->group_specific_timers[query->group_address] = new Timer(&IGMPGroupMember::send_group_specific_report, report);
                         this->group_specific_timers[query->group_address]->initialize(this);
                         this->group_specific_timers[query->group_address]->schedule_after_msec(delay);
@@ -100,20 +91,20 @@ void IGMPGroupMember::handle_query(Packet *p) {
 
                     // 4. If Group specific && Another previous one, send the fastest of the two.
                     if ( ! query->group_address.empty() && this->group_specific_timers[query->group_address] != this->group_specific_timers.default_value()) {
-                        click_chatter("Got a Group-Specific Query, but there's one scheduled.. ");
+                        click_chatter("CLIENT: Got a Group-Specific Query, but there's one scheduled.. ");
                         auto difference = (this->general_timer->expiry() - Timestamp::now());
                         this->group_specific_timers[query->group_address] = new Timer(&IGMPGroupMember::send_group_specific_report, report);
                         this->group_specific_timers[query->group_address]->initialize(this);
                         this->group_specific_timers[query->group_address]->schedule_after_msec(difference.msecval() + delay);
                         return;
                     }
-                    click_chatter("I shouldn't be here....");
+                    click_chatter("CLIENT: I shouldn't be here....");
                 }
             }
         }
     }
     catch (...) {
-        click_chatter("HOOOW JOH! DOE KE NORMAAL!");
+        click_chatter("CLIENT: HOOOW JOH! DOE KE NORMAAL!");
         p->kill();
         return;
     }
@@ -139,9 +130,9 @@ int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk
     ReportData* report = new ReportData();
     report->self = self;
     report->group_address = group;
-    report->type = IN_TO_EX; // TODO klopt dit?
+    report->type = IN_TO_EX;
     report->generated_packet = packet;
-    report->retransmit_times = RV;
+    report->retransmit_times = defaults::robustness_variable;
 
     self->output(1).push(packet->clone()->uniqueify());
 
@@ -149,9 +140,9 @@ int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk
     self->report_timers[group]->initialize(self);
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<> dist(0, URI * 1000); // van sec naar miliseconden
+    std::uniform_int_distribution<> dist(0, defaults::unsolicited_report_interval * 1000); // van sec naar miliseconden
     int delay = dist(gen);
-    click_chatter("delay added (1st send): %d", delay);
+    //click_chatter("CLIENT: delay added (1st send): %d", delay);
     self->report_timers[report->group_address]->schedule_after_msec(delay);
 
     return 0;
@@ -177,9 +168,9 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
     ReportData* report = new ReportData();
     report->self = self;
     report->group_address = group;
-    report->type = EX_TO_IN; // TODO klopt dit?
+    report->type = EX_TO_IN;
     report->generated_packet = packet;
-    report->retransmit_times = RV;
+    report->retransmit_times = defaults::robustness_variable;
 
     self->output(1).push(packet->clone()->uniqueify());
 
@@ -187,9 +178,9 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
     self->report_timers[group]->initialize(self);
     std::random_device rd;  //Will be used to obtain a seed for the random number engine
     std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-    std::uniform_int_distribution<> dist(0, URI * 1000); // van sec naar miliseconden
+    std::uniform_int_distribution<> dist(0, defaults::unsolicited_report_interval * 1000); // van sec naar miliseconden
     int delay = dist(gen);
-    click_chatter("delay added (1st send): %d", delay);
+    //click_chatter("CLIENT: delay added (1st send): %d", delay);
     self->report_timers[report->group_address]->schedule_after_msec(delay);
     return 0;
 }
@@ -197,13 +188,12 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
 void IGMPGroupMember::add_handlers() {
     add_write_handler("join", join_group_handler);
     add_write_handler("leave", leave_group_handler);
-
 }
 
 Packet* IGMPGroupMember::generate_report(int type, IPAddress group_address, IGMPGroupMember* self) {
 
     int n_records = self->source_set.size();
-    click_chatter("Generate report! n_records = %d", n_records);
+    //click_chatter("CLIENT: Generate report! n_records = %d", n_records);
     if (n_records == 0) {
         return nullptr;
     }
@@ -215,7 +205,7 @@ Packet* IGMPGroupMember::generate_report(int type, IPAddress group_address, IGMP
     WritablePacket* packet = Packet::make(headroom, 0, packetsize, tailroom);
 
     if (packet == 0 ) {
-        click_chatter("Cannot generate packet!");
+        click_chatter("CLIENT: Cannot generate packet!");
         return packet;
     }
     memset(packet->data(), 0, packet->length()); //
@@ -261,9 +251,9 @@ void IGMPGroupMember::send_change_report(Timer* timer, void* ptr) {
 
         std::random_device rd;  //Will be used to obtain a seed for the random number engine
         std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
-        std::uniform_int_distribution<> dist(0, URI * 1000); // van sec naar miliseconden
+        std::uniform_int_distribution<> dist(0, defaults::unsolicited_report_interval * 1000); // van sec naar miliseconden
         int delay = dist(gen);
-        click_chatter("delay added (consecutive send): %d", delay);
+        //click_chatter("CLIENT: delay added (consecutive send): %d", delay);
 
         report->self->report_timers[report->group_address]->schedule_after_msec(delay);
     }

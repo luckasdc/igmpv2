@@ -5,7 +5,6 @@
 #include <click/packet.hh>
 #include <memory>
 
-
 #define REPORT 0x22
 #define QUERY 0x11
 
@@ -14,10 +13,6 @@
 #define EX_TO_IN 3
 #define IN_TO_EX 4
 #define RESPONSE_TO_QUERY 5 // internal usage only
-
-// TODO Fixed variables: a decent solution for these
-#define URI 1 // seconds
-#define RV 2  // times
 
 enum class report_record_type : uint8_t {
     m_include = 1,
@@ -34,10 +29,6 @@ typedef union {
         unsigned int mant : 4;
     } parts;
 } float_cast;
-
-namespace util {
-
-}
 
 
 struct MembershipQuery {
@@ -143,7 +134,6 @@ struct MembershipReport {
         return output;
     }
 
-//    inline unsigned int size() { return 8 + (this->n_group_records * sizeof(group_record)) }
 };
 
 

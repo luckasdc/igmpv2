@@ -11,6 +11,8 @@
 #include <click/packet_anno.hh>
 
 
+
+
 CLICK_DECLS
 
 using namespace router;
@@ -196,41 +198,48 @@ void IGMPRouter::set_leave_timers(int interface, IPAddress source, IPAddress mul
 
 void IGMPRouter::received_igmp_report(int port, Packet* p) {
 
-    // TODO try catch zoals client
-    IPAddress source = p->ip_header()->ip_src;
+    try {
+        if (not checkQuery(p)) {
+            p->kill();
+            return;
+        }
+        IPAddress source = p->ip_header()->ip_src;
+        // parse report
+        MembershipReport* report = (MembershipReport*) (p->data() + p->ip_header_length());
+        // get group records
+        uint16_t n = ntohs(report->n_group_records);
+        auto records = report->get_group_records(p, n);
 
-    // make report
-    MembershipReport* report = (MembershipReport*) (p->data() + p->ip_header_length());
-    // get group records
-    uint16_t n = ntohs(report->n_group_records);
-    auto records = report->get_group_records(p, n);
+        for (int i = 0; i < n; i++) {
+            // zoek in table naar de group state
 
-    for (int i = 0; i < n; i++) {
-        // zoek in table naar de group state
-
-        click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
-        switch (records[i]->record_type) {
-            case IN_TO_EX: {
-                this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
-                break;
-            }
-            case EX_TO_IN: {
-                this->set_leave_timers(port, source, records[i]->multicast_address);
-                break;
-            }
-            case IN: {
-                break;
-                // NADA
-            }
-            case EX: {
-                this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
-                break;
+            click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
+            switch (records[i]->record_type) {
+                case IN_TO_EX: {
+                    this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+                    break;
+                }
+                case EX_TO_IN: {
+                    this->set_leave_timers(port, source, records[i]->multicast_address);
+                    break;
+                }
+                case IN: {
+                    break;
+                    // NADA
+                }
+                case EX: {
+                    this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+                    break;
+                }
             }
         }
-    }
 
-    click_chatter("Router:\tHandled Report. Size of records: %d", records.size());
-    p->kill();
+        click_chatter("Router:\tHandled Report. Size of records: %d", records.size());
+        p->kill();
+    }
+    catch (...) {
+        p->kill();
+    }
 }
 
 void IGMPRouter::add_handlers() {
@@ -277,8 +286,18 @@ void IGMPRouter::send_group_specific_query(Timer* timer, void* ptr) {
 
 }
 
+bool IGMPRouter::checkQuery(Packet *p) {
+    // TODO IP header  checken
+    MembershipReport* report = (MembershipReport*) (p->data() + p->ip_header_length());
+
+    // One's complement of total payload is done by adding the bitwise operator & 0xFFFF
+    // must be equal to 0
+    return (click_in_cksum((unsigned char*) report, p->length() - p->ip_header_length()) & 0xFFFF) == 0;
+
+}
+
+
 
 CLICK_ENDDECLS
 ELEMENT_REQUIRES(IGMPRouterFilter)
-
 EXPORT_ELEMENT(IGMPRouter)

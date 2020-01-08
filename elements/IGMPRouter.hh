@@ -66,6 +66,8 @@ public:
     static void send_specific_query(Timer*,void*);
     static void delete_group(Timer*,void*);
 
+    bool checkQuery(Packet*p);
+
     uint32_t maxSize;
 
     Timer general_query_timer;

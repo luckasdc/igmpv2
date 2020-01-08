@@ -53,7 +53,6 @@ elementclass Router {
 	    -> [0] igmp; // Send udp data directly to igmp
 
 
-
 	// Input and output paths for interface 1
 	input[1]
 		-> HostEtherFilter($client1_address)
@@ -74,6 +73,7 @@ elementclass Router {
 
     igmp_classifier_c1[0]
         -> Strip(14)
+        -> CheckIPHeader
         -> [1]igmp;
 
     igmp_classifier_c1[1]
@@ -95,6 +95,7 @@ elementclass Router {
 
     igmp_classifier_c2[0]
         -> Strip(14)
+        -> CheckIPHeader
         -> [2]igmp;
 
     igmp_classifier_c2[1]
