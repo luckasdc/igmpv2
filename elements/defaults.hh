@@ -6,9 +6,9 @@
 #define IGMP_DEFAULTS_HH
 
 namespace defaults {
-    const int robustness_variable = 2; // r_v - 1 = # pakketten (not 0 or 1)
-    const int query_interval = 10; // s default: 125
-    const int query_response = 100; // ds
+    const int robustness_variable = 2; // not 1 or 0
+    const int query_interval = 20; // s default: 125
+    const int query_response = 10; // ds
     const int last_member_query_count = robustness_variable; // default : r_v
     const int last_member_query_interval = 10; //ds
     const int unsolicited_report_interval = 1; // s

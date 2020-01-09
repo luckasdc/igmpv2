@@ -35,6 +35,8 @@ public:
 
     static void send_group_specific_query(Timer* timer, void* ptr);
 
+    bool no_queries = false;
+
     int robustness_variable = defaults::robustness_variable;
     int query_interval = defaults::query_interval;
     int query_response = defaults::query_response;
@@ -42,7 +44,6 @@ public:
     int last_member_query_interval = defaults::last_member_query_interval;
     int unsolicited_report_interval = defaults::unsolicited_report_interval;
 
-    bool other_querier = false;
 
     IPAddress _group_address;
 

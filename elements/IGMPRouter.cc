@@ -109,16 +109,25 @@ void IGMPRouter::received_igmp(int port, Packet* p) {
 
 void IGMPRouter::received_igmp_query(int port, Packet* p) {
     click_chatter("Router:\tReceived IGMP Query");
+    // not finished
+    try {
+        if (not checkQuery(p)) {
+            p->kill();
+            return;
+        }
+        IPAddress source = p->ip_header()->ip_src;
+        auto query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
+        if(query->qrv > 2){
+            this->robustness_variable = query->qrv;
+        }
 
-
-
-    // setup group specific timers
-
-    // als er een timer is laat timer staan
-
-
-
+        click_chatter("Router:\tHandled Query. Size of records: %d");
+        p->kill();
+    }
+    catch (...) {
+        p->kill();
+    }
 }
 
 
@@ -155,7 +164,6 @@ struct LeaveBlob {
 void IGMPRouter::send_specific_query(Timer* timer, void* pVoid) {
     auto blob = (LeaveBlob*) pVoid;
     blob->last_member_query_count -= 1;
-    click_chatter("LMQC: %d", blob->last_member_query_count);
     if (blob->last_member_query_count >= 0) {
         auto packet = generate_leave_query(blob->router, blob->interface, blob->multicast);
         blob->router->output(blob->interface).push(packet);
@@ -169,7 +177,6 @@ void IGMPRouter::delete_group(Timer* timer, void* pVoid) {
     auto group_state = (GroupState*) pVoid;
     group_state->group_timer = nullptr;
     delete timer;
-    click_chatter("lol");
     if (not group_state->has_replied) {
         // Didn't replied
         group_state->router_state->delete_group(group_state);
@@ -180,8 +187,6 @@ void IGMPRouter::delete_group(Timer* timer, void* pVoid) {
 
 void IGMPRouter::set_leave_timers(int interface, IPAddress source, IPAddress multicast) {
     GroupState* group_state = this->state->get_group(interface, multicast);
-    click_chatter("lolololol");
-
 
     // Check if timer is already set
     if (group_state->group_timer != nullptr) return;
@@ -258,7 +263,9 @@ WritablePacket* generate_general_query(IGMPRouter* router) {
     MembershipQuery* membership_query = (MembershipQuery*) (packet->data());
     membership_query->setup();
     membership_query->group_address = IPAddress(0);
-    membership_query->qrv = router->robustness_variable;
+    membership_query->qrv = (uint8_t) router->robustness_variable;
+    membership_query->set_max_response_code(router->query_response);
+    membership_query->set_query_interval_code(router->query_interval);
     membership_query->checksum = 0;
     membership_query->checksum = click_in_cksum(packet->data(), packet->length());
     // Paint the packet with color 1 so it gets forward to the right place
@@ -297,7 +304,6 @@ void IGMPRouter::send_general_query(Timer* timer, void* pVoid) {
 
 void IGMPRouter::send_other_query(Timer* timer, void* ptr) {
     auto router = (IGMPRouter*) ptr;
-    router->other_querier = false;
     router->general_query_timer.reschedule_after_sec(router->query_interval);
 }
 

@@ -33,12 +33,12 @@ typedef union {
 
 struct MembershipQuery {
     uint8_t type; // 0x11
-    uint8_t max_resp_code = 0;
+    uint8_t max_resp_code;
     uint16_t checksum;
     IPAddress group_address;
-    uint8_t resv : 4;
-    uint8_t s_flag : 1;
     uint8_t qrv : 3;
+    uint8_t s_flag : 1;
+    uint8_t resv : 4;
     uint8_t qqic;
     uint8_t n_sources;
     // Vector<IPAddress> source_addresses;
@@ -91,9 +91,8 @@ struct MembershipQuery {
     void setup() {
         this->type = QUERY;
         this->n_sources = htons(0);
-        this->qrv = 0;
-        this->s_flag = 1;
-        this->max_resp_code = 1;
+        this->s_flag = 0;
+        this->resv = 0;
     }
 };
 
