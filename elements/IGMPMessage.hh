@@ -135,5 +135,11 @@ struct MembershipReport {
 
 };
 
+struct RouterAlert {
+    uint8_t type;
+    uint8_t length;
+    uint16_t value;
+};
+
 
 #endif //IGMP_IGMPMESSAGE_HH

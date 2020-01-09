@@ -36,7 +36,7 @@ elementclass Client {
 		-> output;
 
     igmp[1]
-        -> IPEncap(2, $address, 224.0.0.22, TTL 1)
+        -> IPEncapDeluxe(2, $address, 224.0.0.22, TTL 1)
         -> CheckIPHeader()
         -> arpq;
 

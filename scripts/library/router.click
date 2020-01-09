@@ -158,7 +158,7 @@ elementclass Router {
         ->[0]output;
 
     ps0[1]
-        -> IPEncap(2, $server_address, DST DST_ANNO, TTL 1)
+        -> IPEncapDeluxe(2, $server_address, DST DST_ANNO, TTL 1)
         -> server_arpq;
 
 
@@ -170,7 +170,7 @@ elementclass Router {
         ->[1]output;
 
     ps1[1]
-        -> IPEncap(2, $client1_address, DST DST_ANNO, TTL 1)
+        -> IPEncapDeluxe(2, $client1_address, DST DST_ANNO, TTL 1)
         -> client1_arpq;
 
 
@@ -183,6 +183,6 @@ elementclass Router {
          ->[2]output;
 
     ps2[1]
-         -> IPEncap(2, $client2_address, DST DST_ANNO, TTL 1)
+         -> IPEncapDeluxe(2, $client2_address, DST DST_ANNO, TTL 1)
          ->client2_arpq;
 }
