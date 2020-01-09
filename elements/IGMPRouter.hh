@@ -13,7 +13,6 @@ CLICK_DECLS
 using namespace router;
 
 
-
 class IGMPRouter : public Element {
 public:
 
@@ -63,10 +62,15 @@ public:
 
     void set_leave_timers(int, IPAddress, IPAddress);
 
-    static void send_specific_query(Timer*,void*);
-    static void delete_group(Timer*,void*);
+    void set_general_timer();
 
-    bool checkQuery(Packet*p);
+    static void send_specific_query(Timer*, void*);
+
+    static void delete_group(Timer*, void*);
+
+    static void general_delete(Timer*, void*);
+
+    bool checkQuery(Packet* p);
 
     uint32_t maxSize;
 

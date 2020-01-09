@@ -47,6 +47,7 @@ namespace router {
         unsigned int interface;
         FilterMode filter_mode = FilterMode::INCLUDE;
         bool has_replied = false;
+        bool has_replied_to_general = false;
 
         HashTable<IPAddress, SourceRecord*> source_records;
 
@@ -76,11 +77,14 @@ namespace router {
     };
 
     struct RouterState {
-        Vector<GroupState*> group_states;
+        Vector<GroupState*> group_states{};
 
         GroupState* get_group(int port, IPAddress mul);
         bool find_insert_group_state(int port, IPAddress client, IPAddress server);
-        void delete_group(GroupState*);
+
+        void delete_group(GroupState* groupState);
+
+        void delete_not_replied_general_query();
 
         bool listening(IPAddress server, IPAddress source, int);
     };

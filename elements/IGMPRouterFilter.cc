@@ -123,6 +123,7 @@ void GroupState::start_listening(IPAddress client) {
         return;
     }
     this->has_replied = true;
+    this->has_replied_to_general = true;
 }
 
 
@@ -164,8 +165,17 @@ bool RouterState::find_insert_group_state(int port, IPAddress client, IPAddress 
     return true;
 }
 
+void RouterState::delete_not_replied_general_query() {
+    for (GroupState* group : this->group_states) {
+        if (not group->has_replied_to_general and group->router_state == this){
+            group->router_state = nullptr;
+        }
+        // reset
+        group->has_replied_to_general = false;
+    }
+}
+
 void RouterState::delete_group(GroupState* group_state) {
-    click_chatter("Erasing 0");
     group_state->router_state = nullptr;
 }
 

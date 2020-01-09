@@ -185,13 +185,19 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
     return 0;
 }
 
+int IGMPGroupMember::kill_self_handler(const String &s, Element* e, void* thunk, ErrorHandler* errh) {
+    auto d = (IGMPGroupMember*)e;
+    d->reply_to_general_query = not d->reply_to_general_query;
+    return 0;
+}
+
 void IGMPGroupMember::add_handlers() {
     add_write_handler("join", join_group_handler);
     add_write_handler("leave", leave_group_handler);
+    add_write_handler("kill", kill_self_handler);
 }
 
 Packet* IGMPGroupMember::generate_report(int type, IPAddress group_address, IGMPGroupMember* self) {
-
     int n_records = self->source_set.size();
     //click_chatter("CLIENT: Generate report! n_records = %d", n_records);
     if (n_records == 0) {
@@ -267,6 +273,7 @@ void IGMPGroupMember::send_general_report(Timer *timer, void *ptr) {
     // Convert pointer back to report data struct
     ReportData* report = (ReportData*) ptr;
     // Send report
+    if(not report->self->reply_to_general_query) return;
     report->self->output(1).push(report->generated_packet->clone()->uniqueify());
     // Clear timer
     timer->clear();
