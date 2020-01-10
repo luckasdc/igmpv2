@@ -130,7 +130,6 @@ void IGMPRouter::received_igmp_query(int port, Packet* p) {
             p->kill();
             return;
         }
-        IPAddress source = p->ip_header()->ip_src;
         auto query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
         if (query->qrv > 2) {
@@ -241,7 +240,7 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
             //click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
             switch (records[i]->record_type) {
                 case IN_TO_EX: {
-                    this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+                    this->state->find_insert_group_state(port, source, records[i]->multicast_address);
                     break;
                 }
                 case EX_TO_IN: {
@@ -253,7 +252,7 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
                     // NADA
                 }
                 case EX: {
-                    this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
+                    this->state->find_insert_group_state(port, source, records[i]->multicast_address);
                     break;
                 }
             }
@@ -302,12 +301,12 @@ void IGMPRouter::general_delete(Timer* timer, void* pVoid) {
     delete timer;
     auto router = (IGMPRouter*) pVoid;
     router->state->delete_not_replied_general_query();
+    router->state->reset_not_replied_general();
 }
 
 void IGMPRouter::send_general_query(Timer* timer, void* pVoid) {
     //click_chatter("Router: Sending General Query");
     auto blob = (GeneralQueryBlob*) pVoid;
-    blob->router->state->reset_not_replied_general();
 
     for (int i = 0; i < blob->router->noutputs(); i++) {
         blob->router->output(i).push(generate_general_query(blob->router));

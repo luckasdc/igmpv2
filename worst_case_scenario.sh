@@ -20,10 +20,11 @@ sleep 5
 
 # client32 joins
 echo "write client32/igmp.join 224.4.4.4" | telnet localhost $client32
-sleep 5
+sleep 25
 
 # kill client32
 echo "write client32/igmp.kill" | telnet localhost $client32
+#echo "write client32/igmp.invalid_igmp_checksum REPORT true" | telnet localhost $client32 # FOR REFERENCE
 sleep 10
 # EXPECTED: Router will stop forwarding after
 
@@ -38,4 +39,6 @@ sleep 6
 # client21 leaves
 echo "write client21/igmp.leave 224.4.4.4" | telnet localhost $client21
 sleep 5
+
+# EXPECTED: client21 will keep on answering queries with IS_EXCLUDE 224.4.4.5
 

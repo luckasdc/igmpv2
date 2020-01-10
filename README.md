@@ -6,8 +6,7 @@ using the given reference platform. The implementation can executed by running `
 in the ```click/scripts``` folder. Make sure to comment out the elements in this file when running both this and 
 the reference implementation. 
 
-All the checksums of in- and outgoing IGMP packets will be checked, as well as the the checksums of the IP headers 
-(as a seperate click element)
+All the checksums of in- and outgoing IGMP packets will be checked, as well as the the checksums of the IP headers (as a seperate click element)
 
 ### Basic Usage
 Clients can join/leave multicasts group by calling the following handlers: ``write clientXX/igmp.join [multicast IP]`` and
