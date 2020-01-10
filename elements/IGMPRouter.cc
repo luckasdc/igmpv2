@@ -22,6 +22,13 @@ struct GeneralQueryBlob {
     GeneralQueryBlob(IGMPRouter* router, int lmqc) : router(router), last_member_query_count(lmqc) {}
 };
 
+struct StartUpQueryBlob {
+    IGMPRouter* router;
+    int queries_to_send;
+
+    StartUpQueryBlob(IGMPRouter* router, int queries_to_send) : router(router), queries_to_send(queries_to_send) {}
+};
+
 int IGMPRouter::initialize(ErrorHandler* errh) {
     this->state = new RouterState();
     if (this->robustness_variable < 2) return -1;
@@ -29,7 +36,11 @@ int IGMPRouter::initialize(ErrorHandler* errh) {
         this->general_query_timer.initialize(this, true);
         this->general_query_timer.assign(IGMPRouter::send_general_query,
                                          new GeneralQueryBlob(this, this->last_member_query_count));
-        this->general_query_timer.schedule_now();
+        if (this->startup_phase()) {
+            this->general_query_timer.schedule_after_sec(this->startup_query_interval);
+        } else {
+            this->general_query_timer.schedule_after_sec(this->query_interval);
+        }
     } catch (...) {
         return -1;
     }
@@ -48,6 +59,7 @@ bool IGMPRouter::listening(IPAddress multicast, IPAddress source, int interface)
 //    auto group_state = this->state->group_states[interface];
 //
 //    return group_state->listening(source);
+    return false;
 }
 
 void IGMPRouter::push(int port, Packet* p) {
@@ -118,7 +130,7 @@ void IGMPRouter::received_igmp_query(int port, Packet* p) {
         IPAddress source = p->ip_header()->ip_src;
         auto query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
-        if(query->qrv > 2){
+        if (query->qrv > 2) {
             this->robustness_variable = query->qrv;
         }
 
@@ -139,8 +151,8 @@ WritablePacket* generate_leave_query(IGMPRouter* router, int interface, IPAddres
     membership_query->setup();
     membership_query->group_address = multicast;
     membership_query->qrv = router->robustness_variable;
-    membership_query->set_query_interval_code(router->last_member_query_interval / 10);
-    membership_query->set_max_response_code(router->last_member_query_interval);
+    membership_query->set_query_interval_code(router->last_member_query_interval);
+    membership_query->set_max_response_code(router->last_member_query_timer());
     membership_query->checksum = 0;
     membership_query->checksum = click_in_cksum(packet->data(), packet->length());
     packet->set_anno_u8(PAINT_ANNO_OFFSET, 1);
@@ -163,11 +175,11 @@ struct LeaveBlob {
 
 void IGMPRouter::send_specific_query(Timer* timer, void* pVoid) {
     auto blob = (LeaveBlob*) pVoid;
-    blob->last_member_query_count -= 1;
-    if (blob->last_member_query_count >= 0) {
+    if (blob->last_member_query_count > 0) {
         auto packet = generate_leave_query(blob->router, blob->interface, blob->multicast);
         blob->router->output(blob->interface).push(packet);
         timer->reschedule_after_ms(blob->time_schedule);
+        blob->last_member_query_count -= 1;
     } else {
         delete timer;
     }
@@ -196,7 +208,7 @@ void IGMPRouter::set_leave_timers(int interface, IPAddress source, IPAddress mul
     group_state->group_timer = new Timer(IGMPRouter::delete_group, group_state);
     group_state->group_timer->initialize(this);
     click_chatter("Will delete after %d", this->last_member_query_timer());
-    group_state->group_timer->schedule_after_sec(this->last_member_query_timer() / 10); //ds
+    group_state->group_timer->schedule_after_sec(this->last_member_query_timer()); //ds
 
     unsigned int time_schedule_query = 100 * last_member_query_interval;
     auto blob = new LeaveBlob(this, multicast, this->last_member_query_count, interface, time_schedule_query);
@@ -265,7 +277,11 @@ WritablePacket* generate_general_query(IGMPRouter* router) {
     membership_query->group_address = IPAddress(0);
     membership_query->qrv = (uint8_t) router->robustness_variable;
     membership_query->set_max_response_code(router->query_response);
-    membership_query->set_query_interval_code(router->query_interval);
+    if (router->startup_phase()) {
+        membership_query->set_query_interval_code(router->startup_query_interval);
+    } else {
+        membership_query->set_query_interval_code(router->query_interval);
+    }
     membership_query->checksum = 0;
     membership_query->checksum = click_in_cksum(packet->data(), packet->length());
     // Paint the packet with color 1 so it gets forward to the right place
@@ -279,6 +295,7 @@ void IGMPRouter::set_general_timer() {
 
 
 void IGMPRouter::general_delete(Timer* timer, void* pVoid) {
+    click_chatter("Kill all didn't replied.");
     delete timer;
     auto router = (IGMPRouter*) pVoid;
     router->state->delete_not_replied_general_query();
@@ -287,19 +304,21 @@ void IGMPRouter::general_delete(Timer* timer, void* pVoid) {
 void IGMPRouter::send_general_query(Timer* timer, void* pVoid) {
     click_chatter("Router: Sending General Query");
     auto blob = (GeneralQueryBlob*) pVoid;
+    blob->router->state->reset_not_replied_general();
+
     for (int i = 0; i < blob->router->noutputs(); i++) {
         blob->router->output(i).push(generate_general_query(blob->router));
     }
-    blob->router->general_query_timer.reschedule_after_sec(blob->router->query_interval);
-    // trigger delete timer if count is zero
-    if (blob->last_member_query_count == 0) {
-        click_chatter("Kill all didn't replied.");
+    if (blob->router->startup_phase()) {
+        blob->router->general_query_timer.reschedule_after_sec(blob->router->startup_query_interval);
+        blob->router->_startup_count += 1;
+    } else {
+        blob->router->general_query_timer.reschedule_after_sec(blob->router->query_interval);
+
         auto general_timer = new Timer(IGMPRouter::general_delete, blob->router);
         general_timer->initialize(blob->router);
         general_timer->schedule_after_sec(blob->router->group_member_interval());
-        blob->last_member_query_count = blob->router->robustness_variable;
     }
-    blob->last_member_query_count -= 1;
 }
 
 void IGMPRouter::send_other_query(Timer* timer, void* ptr) {

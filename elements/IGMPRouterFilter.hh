@@ -86,6 +86,8 @@ namespace router {
 
         void delete_not_replied_general_query();
 
+        void reset_not_replied_general();
+
         bool listening(IPAddress server, IPAddress source, int);
     };
 

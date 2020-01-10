@@ -168,9 +168,13 @@ bool RouterState::find_insert_group_state(int port, IPAddress client, IPAddress 
 void RouterState::delete_not_replied_general_query() {
     for (GroupState* group : this->group_states) {
         if (not group->has_replied_to_general and group->router_state == this){
-            group->router_state = nullptr;
+            this->delete_group(group);
         }
-        // reset
+    }
+}
+
+void RouterState::reset_not_replied_general() {
+    for (GroupState* group : this->group_states) {
         group->has_replied_to_general = false;
     }
 }

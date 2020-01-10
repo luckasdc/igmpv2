@@ -28,7 +28,6 @@ bool checkQuery(Packet* p) {
 
 
 int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
-
     return 0;
 }
 
