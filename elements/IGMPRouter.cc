@@ -115,13 +115,15 @@ void IGMPRouter::received_igmp(int port, Packet* p) {
             default:
                 p->kill();
         }
+
+    }
     catch (...) {
         p->kill();
     }
 }
 
 void IGMPRouter::received_igmp_query(int port, Packet* p) {
-    click_chatter("Router:\tReceived IGMP Query");
+    //click_chatter("Router:\tReceived IGMP Query");
     // not finished
     try {
         if (not checkQuery(p)) {
@@ -135,7 +137,7 @@ void IGMPRouter::received_igmp_query(int port, Packet* p) {
             this->robustness_variable = query->qrv;
         }
 
-        click_chatter("Router:\tHandled Query. Size of records: %d");
+        //click_chatter("Router:\tHandled Query. Size of records: %d");
         p->kill();
     }
     catch (...) {
@@ -208,7 +210,7 @@ void IGMPRouter::set_leave_timers(int interface, IPAddress source, IPAddress mul
     // Group Timer
     group_state->group_timer = new Timer(IGMPRouter::delete_group, group_state);
     group_state->group_timer->initialize(this);
-    click_chatter("Will delete after %d", this->last_member_query_timer());
+    //click_chatter("Will delete after %d", this->last_member_query_timer());
     group_state->group_timer->schedule_after_sec(this->last_member_query_timer()); //ds
 
     unsigned int time_schedule_query = 100 * last_member_query_interval;
@@ -236,7 +238,7 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
         for (int i = 0; i < n; i++) {
             // zoek in table naar de group state
 
-            click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
+            //click_chatter(" - A group record: %s", records[i]->multicast_address.unparse().c_str());
             switch (records[i]->record_type) {
                 case IN_TO_EX: {
                     this->state->RouterState::find_insert_group_state(port, source, records[i]->multicast_address);
@@ -257,7 +259,7 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
             }
         }
 
-        click_chatter("Router:\tHandled Report. Size of records: %d", records.size());
+        //click_chatter("Router:\tHandled Report. Size of records: %d", records.size());
         p->kill();
     }
     catch (...) {
@@ -296,14 +298,14 @@ void IGMPRouter::set_general_timer() {
 
 
 void IGMPRouter::general_delete(Timer* timer, void* pVoid) {
-    click_chatter("Kill all didn't replied.");
+    //click_chatter("Kill all didn't replied.");
     delete timer;
     auto router = (IGMPRouter*) pVoid;
     router->state->delete_not_replied_general_query();
 }
 
 void IGMPRouter::send_general_query(Timer* timer, void* pVoid) {
-    click_chatter("Router: Sending General Query");
+    //click_chatter("Router: Sending General Query");
     auto blob = (GeneralQueryBlob*) pVoid;
     blob->router->state->reset_not_replied_general();
 

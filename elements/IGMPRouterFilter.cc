@@ -58,13 +58,13 @@ void GroupState::start_listening(IPAddress client) {
 bool RouterState::listening(IPAddress multicast, IPAddress source, int interface) {
     //if (multicast == defaults::all_systems_multicast_address) return true;
     //if (multicast == defaults::report_address) return true;
-    click_chatter("listening to group on interface %d, mc %s ", interface, multicast.unparse().c_str());
+    //click_chatter("listening to group on interface %d, mc %s ", interface, multicast.unparse().c_str());
 
 
     if (this->get_group(interface, multicast) != nullptr) {
         return true;
     }
-    click_chatter("Router State: interface doesn't exist in state.");
+    //click_chatter("Router State: interface doesn't exist in state.");
     return false;
 }
 

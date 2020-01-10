@@ -60,7 +60,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
 
                     // 1. Already a response scheduled, which departs before calculated delay? -> dont create new one
                     if ( query->group_address.empty() && this->general_timer->scheduled()) {
-                        click_chatter("CLIENT: Already a query scheduled. Calculating difference.");
+                        //click_chatter("CLIENT: Already a query scheduled. Calculating difference.");
                         auto difference = (this->general_timer->expiry() - Timestamp::now());
                         if ( delay < difference.msecval()) {
                             return;
@@ -68,7 +68,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
                     }
                     // 2. If type is General query: cancel previous responses
                     if (query->group_address.empty()) {
-                        click_chatter("CLIENT: Got a General Query, and will cancel previous ones");
+                        //click_chatter("CLIENT: Got a General Query, and will cancel previous ones");
                         if (this->general_timer->scheduled()) { // If theres a previous one, remove timer
                             this->general_timer->clear();
                         }
@@ -80,7 +80,7 @@ void IGMPGroupMember::handle_query(Packet *p) {
 
                     // 3. If Group specific && NO pending previous ones, use group timers
                     if ( ! query->group_address.empty() && this->group_specific_timers[query->group_address] == this->group_specific_timers.default_value()) {
-                        click_chatter("CLIENT: Got a Group-Specifix Query, no previous one scheduled.");
+                        //click_chatter("CLIENT: Got a Group-Specifix Query, no previous one scheduled.");
                         this->group_specific_timers[query->group_address] = new Timer(&IGMPGroupMember::send_group_specific_report, report);
                         this->group_specific_timers[query->group_address]->initialize(this);
                         this->group_specific_timers[query->group_address]->schedule_after_msec(delay);
@@ -89,20 +89,20 @@ void IGMPGroupMember::handle_query(Packet *p) {
 
                     // 4. If Group specific && Another previous one, send the fastest of the two.
                     if ( ! query->group_address.empty() && this->group_specific_timers[query->group_address] != this->group_specific_timers.default_value()) {
-                        click_chatter("CLIENT: Got a Group-Specific Query, but there's one scheduled.. ");
+                        //click_chatter("CLIENT: Got a Group-Specific Query, but there's one scheduled.. ");
                         auto difference = (this->general_timer->expiry() - Timestamp::now());
                         this->group_specific_timers[query->group_address] = new Timer(&IGMPGroupMember::send_group_specific_report, report);
                         this->group_specific_timers[query->group_address]->initialize(this);
                         this->group_specific_timers[query->group_address]->schedule_after_msec(difference.msecval() + delay);
                         return;
                     }
-                    click_chatter("CLIENT: I shouldn't be here....");
+                    //click_chatter("CLIENT: I shouldn't be here....");
                 }
             }
         }
     }
     catch (...) {
-        click_chatter("CLIENT: HOOOW JOH! DOE KE NORMAAL!");
+        //click_chatter("CLIENT: HOOOW JOH! DOE KE NORMAAL!");
         p->kill();
         return;
     }
