@@ -43,13 +43,18 @@ public:
     int last_member_query_count = defaults::last_member_query_count;
     int last_member_query_interval = defaults::last_member_query_interval;
     int unsolicited_report_interval = defaults::unsolicited_report_interval;
+    int startup_query_interval = defaults::startup_query_interval;
+    int startup_query_count = defaults::startup_query_count;
 
+    int _startup_count = 0;
+
+    bool startup_phase() const { return this->_startup_count <= startup_query_count and defaults::startup; }
 
     IPAddress _group_address;
 
-    inline int group_member_interval() { return robustness_variable * query_interval + query_response; }
+    inline int group_member_interval() { return (robustness_variable * query_interval) + (query_response/10); }
 
-    inline int last_member_query_timer() { return last_member_query_count * last_member_query_interval; }
+    inline int last_member_query_timer() { return last_member_query_count * (last_member_query_interval/10); }
 
     RouterState* state;
 
