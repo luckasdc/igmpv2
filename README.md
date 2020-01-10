@@ -33,7 +33,7 @@ Just run these test anywhere on your PC while the clickfiles are running.
 ### Extra Handlers
 We used the given handlers of the reference implementation to test our created elements. But for some specific reasons
 we created our own.
-- a Kill CLient handler. This handler will can be called to simulate a dying client, which will result in 
+- a Kill Client handler. This handler will can be called to simulate a dying client, which will result in 
 not answering to the general queries. Can be undone by calling it again. 
 ``write clientXX/igmp.kill``
 

@@ -8,7 +8,7 @@ client32=10006
 sleep 2
 
 # client21 joins server that does not exist
-echo "write client21/igmp.join 224.4.4.5" | telnet localhost $plient21
+echo "write client21/igmp.join 224.4.4.5" | telnet localhost $client21
 sleep 6
 
 # client21 leaves group where he is not joined to
@@ -34,3 +34,4 @@ sleep 6
 # client21 leaves
 echo "write client21/igmp.leave 224.4.4.4" | telnet localhost $client21
 sleep 5
+
