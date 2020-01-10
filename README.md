@@ -21,19 +21,24 @@ The router will handle these state changes internally, output will be visible in
 Our project comes with 2 scenario's: the ```happy_day_scenario.sh``` end the ```worst_case_scenario.sh```. In the first 
 one, the given scenario (blackboard) will be executed. The second one will stress-test the router and 
 clients by executing the following: 
-- xxx
-- xxx 
-- xxx
+- Client joins a server that does not exist
+- Client leaves a group where he's not joined to  
+- Client joins two times consecutively
+- Client will be killed, router must stop forwarding after timer has passed
 
 ### Extra Handlers
 We used the given handlers of the reference implementation to test our created elements. But for some specific reasons
 we created our own.
-- xxx
-- xxx
-- xxx
+- a Kill CLient handler. This handler will can be called to simulate a dying client, which will result in 
+not answering to the general queries. Can be undone by calling it again. 
+``write clientXX/igmp.kill``
 
 
 
 ### TODO GENERAL
-- [ ] Router Alert option
-- [ ] add expired timer cheking (p 23 en 24)
+- [x] Router Alert option
+- [ ] add expired timer cheking (p 23 en 24) SKIP
+- [ ] Cleanup prints
+- [ ] worst case scenario aanvullen
+- [ ] md aanvullen
+
