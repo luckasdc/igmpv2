@@ -18,7 +18,6 @@ IGMPGroupMember::~ IGMPGroupMember()
 
 
 bool checkQuery(Packet* p) {
-    // TODO IP header  checken
     MembershipQuery* query = (MembershipQuery*) (p->data() + p->ip_header_length());
 
     // One's complement of total payload is done by adding the bitwise operator & 0xFFFF

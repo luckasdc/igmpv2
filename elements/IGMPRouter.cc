@@ -52,8 +52,6 @@ bool IGMPRouter::listening(IPAddress multicast, IPAddress source, int interface)
 
 void IGMPRouter::push(int port, Packet* p) {
 
-    //this->output(port).push(p);
-
     switch (port) {
         // packets from server
         case 0: {
@@ -93,18 +91,21 @@ void IGMPRouter::push(int port, Packet* p) {
 
 void IGMPRouter::received_igmp(int port, Packet* p) {
     uint8_t* type = (uint8_t * )(p->data() + p->ip_header_length());
-    // TODO VALIDATE
-
-    // Check if report
-    switch (*type) {
-        case QUERY:
-            this->received_igmp_query(port, p);
-            return;
-        case REPORT:
-            this->received_igmp_report(port, p);
-            return;
+    try {
+        // Check if report
+        switch (*type) {
+            case QUERY:
+                this->received_igmp_query(port, p);
+                return;
+            case REPORT:
+                this->received_igmp_report(port, p);
+                return;
+            default:
+                p->kill();
+        }
+    catch (...) {
+        p->kill();
     }
-    p->kill();
 }
 
 void IGMPRouter::received_igmp_query(int port, Packet* p) {
