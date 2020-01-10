@@ -121,7 +121,7 @@ int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk
     if (self->source_set.find(group) != self->source_set.end()) {
         return 0;
     }
-
+    click_chatter("%s joins group %s", self->name().c_str(), group.unparse().c_str());
     // Add current group to source_set
     self->source_set.find_insert(group, 1);
     // Generate Membership report (Sent while joining or when responding to membership query)
@@ -160,6 +160,7 @@ int IGMPGroupMember::leave_group_handler(const String& s, Element* e, void* thun
         return 0;
     }
 
+    click_chatter("%s leaves group %s", self->name().c_str(), group.unparse().c_str());
     // Generate Membership report (Sent while joining or when responding to membership query)
     Packet* packet = self->generate_report(EX_TO_IN, group, self);
     // remove current group from source_set
