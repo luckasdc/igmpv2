@@ -124,7 +124,6 @@ void IGMPRouter::received_igmp(int port, Packet* p) {
 
 void IGMPRouter::received_igmp_query(int port, Packet* p) {
     //click_chatter("Router:\tReceived IGMP Query");
-    // not finished
     try {
         if (not checkQuery(p)) {
             p->kill();
@@ -258,7 +257,7 @@ void IGMPRouter::received_igmp_report(int port, Packet* p) {
             }
         }
 
-        //click_chatter("Router:\tHandled Report. Size of records: %d", records.size());
+        //click_chatter("Router: Handled Report. Size of records: %d", records.size());
         p->kill();
     }
     catch (...) {
