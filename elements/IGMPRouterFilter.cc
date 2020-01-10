@@ -1,7 +1,3 @@
-//
-// Created by Stan Schepers on 26/11/2019.
-//
-
 #include <click/config.h>
 #include <algorithm>
 #include "IGMPRouterFilter.hh"

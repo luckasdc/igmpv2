@@ -6,7 +6,10 @@ using the given reference platform. The implementation can executed by running `
 in the ```click/scripts``` folder. Make sure to comment out the elements in this file when running both this and 
 the reference implementation. 
 
-### Basic testing
+All the checksums of in- and outgoing IGMP packets will be checked, as well as the the checksums of the IP headers 
+(as a seperate click element)
+
+### Basic Usage
 Clients can join/leave multicasts group by calling the following handlers: ``write clientXX/igmp.join [multicast IP]`` and
   ``write clientXX/igmp.leave [multicast IP]``. These lines can be executed in the telnet panel
   ``telnet localhost {portnumber}`` where portnumber is:
@@ -25,6 +28,7 @@ clients by executing the following:
 - Client leaves a group where he's not joined to  
 - Client joins two times consecutively
 - Client will be killed, router must stop forwarding after timer has passed
+Just run these test anywhere on your PC while the clickfiles are running.
 
 ### Extra Handlers
 We used the given handlers of the reference implementation to test our created elements. But for some specific reasons
@@ -33,12 +37,14 @@ we created our own.
 not answering to the general queries. Can be undone by calling it again. 
 ``write clientXX/igmp.kill``
 
-
-
-### TODO GENERAL
-- [x] Router Alert option
-- [ ] add expired timer cheking (p 23 en 24) SKIP
-- [ ] Cleanup prints
-- [ ] worst case scenario aanvullen
-- [ ] md aanvullen
+### Nice to know
+- All the variables that can be changed are found in ````defaults.hh````. 
+- Since our packets were encapped outside of the IGMPRouter, and click doens't natively support to 
+add info to the IP header, we needed to come up with our own solution without completely rewriting
+the flow. We cannot override Click classes, so we've imported the code of the element ``IPEncap`` 
+and modified it to add the Router Alert option. (and recalculation of checksum). We've therefore 
+renamed it to ```IPEncapDeluxe```.
+- The UDP data and IGMP messages use the same output, but the UDP data doesn't need an extra header. 
+To split the flow of these packets, they will be colored using color 1 or 0, and ````PaintSwitch```` 
+will distribute them accordingly.
 

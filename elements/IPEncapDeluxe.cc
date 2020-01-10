@@ -1,4 +1,8 @@
 /*
+ *
+ * ELEMENT BASED ON IPEncap OF CLICK SOURCE CODE
+ *
+ *
  * ipencap.{cc,hh} -- element encapsulates packet in IP header
  * Robert Morris, Eddie Kohler, Alex Snoeren
  *
@@ -166,9 +170,9 @@ IPEncapDeluxe::simple_action(Packet *p_in)
     test->length = 4;
     test->value = 0;
 
+    // Update checksum
     update_cksum(ip, sizeof(click_ip));
 
-    //ip->ip_sum = click_in_cksum(ip, sizeof(click_ip) + sizeof(RouterAlert));
 
     p->set_ip_header(ip, sizeof(click_ip));
 

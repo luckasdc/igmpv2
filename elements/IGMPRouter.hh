@@ -1,5 +1,5 @@
-#ifndef CLICK_SIMPLEPULLELEMENT_HH
-#define CLICK_SIMPLEPULLELEMENT_HH
+#ifndef CLICK_IGMPROUTER_HH
+#define CLICK_IGMPROUTER_HH
 
 #include <click/element.hh>
 #include <click/timer.hh>
