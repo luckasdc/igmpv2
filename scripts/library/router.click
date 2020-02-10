@@ -155,10 +155,11 @@ elementclass Router {
         -> ps0::PaintSwitch();
 
     ps0[0]
-        ->[0]output;
+        -> Strip(14)
+        -> server_arpq;
 
     ps0[1]
-        -> IPEncapDeluxe(2, $server_address, DST DST_ANNO, TTL 1)
+        -> IPEncapDeluxe(2, $server_address, DST DST_ANNO, TTL 1, TOS 192)
         -> server_arpq;
 
 
@@ -167,10 +168,11 @@ elementclass Router {
         -> ps1::PaintSwitch;
 
     ps1[0]
-        ->[1]output;
+        -> Strip(14)
+        -> client1_arpq;
 
     ps1[1]
-        -> IPEncapDeluxe(2, $client1_address, DST DST_ANNO, TTL 1)
+        -> IPEncapDeluxe(2, $client1_address, DST DST_ANNO, TTL 1, TOS 192)
         -> client1_arpq;
 
 
@@ -180,9 +182,10 @@ elementclass Router {
         -> ps2::PaintSwitch;
 
     ps2[0]
-         ->[2]output;
+         -> Strip(14)
+         -> client2_arpq;
 
     ps2[1]
-         -> IPEncapDeluxe(2, $client2_address, DST DST_ANNO, TTL 1)
-         ->client2_arpq;
+         -> IPEncapDeluxe(2, $client2_address, DST DST_ANNO, TTL 1, TOS 192)
+         -> client2_arpq;
 }

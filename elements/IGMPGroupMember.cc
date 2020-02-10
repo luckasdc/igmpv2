@@ -32,6 +32,7 @@ int IGMPGroupMember::configure(Vector<String> &conf, ErrorHandler *errh) {
 
 void IGMPGroupMember::push(int port, Packet *p){
     if (port == 0) { handle_query(p); }
+    else if (port == 1) { handle_data(p);}
     else { p->kill(); }
 }
 
@@ -107,6 +108,17 @@ void IGMPGroupMember::handle_query(Packet *p) {
         return;
     }
 }
+
+void IGMPGroupMember::handle_data(Packet *p) {
+
+    IPAddress group = p->ip_header()->ip_dst;
+    if (this->source_set.find(group) != this->source_set.end()) {
+        this->output(0).push(p);
+    }
+    else { p->kill();}
+
+}
+
 
 int IGMPGroupMember::join_group_handler(const String& s, Element* e, void* thunk, ErrorHandler* errh) {
     Vector<String> args;
@@ -206,7 +218,7 @@ Packet* IGMPGroupMember::generate_report(int type, IPAddress group_address, IGMP
     // View example in clickfaq.pdf
     int tailroom = 0;
     int packetsize = sizeof(struct MembershipReport) + n_records * sizeof(struct GroupRecord);
-    int headroom = sizeof(click_ether) + sizeof(click_ip);
+    int headroom = sizeof(click_ether) + sizeof(click_ip) + sizeof(RouterAlert) + sizeof(RouterAlert);
     WritablePacket* packet = Packet::make(headroom, 0, packetsize, tailroom);
 
     if (packet == 0 ) {

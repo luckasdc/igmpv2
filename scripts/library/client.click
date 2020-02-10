@@ -15,16 +15,16 @@ elementclass Client {
 					$address:ipnet 0,
 					224.0.0.0/4 2,
 					0.0.0.0/0.0.0.0 $gateway 1)
+
 		-> [1]output;
 
 
 	rt[2]
 	    -> IPClass::IPClassifier(ip proto IGMP, -)
     	-> [0]igmp
-    	-> Discard;
 
-    IPClass[1]
-        -> [1]output;
+    IPClass[1] // Filter data
+        -> [1]igmp;
 
 	rt[1]
 		-> DropBroadcasts
@@ -35,8 +35,11 @@ elementclass Client {
 		-> arpq :: ARPQuerier($address)
 		-> output;
 
-    igmp[1]
-        -> IPEncapDeluxe(2, $address, 224.0.0.22, TTL 1)
+	igmp[0] // Deliver data
+	    -> [1]output;
+
+    igmp[1] // Send Reports
+        -> IPEncapDeluxe(2, $address, 224.0.0.22, TTL 1, TOS 192)
         -> CheckIPHeader()
         -> arpq;
 

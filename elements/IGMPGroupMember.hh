@@ -18,7 +18,7 @@ public:
 
     const char* class_name() const { return "IGMPGroupMember"; }
 
-    const char* port_count() const { return "1/2"; }
+    const char* port_count() const { return "2/2"; }
 
     const char* processing() const { return PUSH; }
 
@@ -30,6 +30,9 @@ public:
 
     // Query Responders
     void handle_query(Packet* p);
+
+    // Data Filter
+    void handle_data(Packet* p);
 
     // Handlers
     static int join_group_handler(const String &s, Element* e, void* thunk, ErrorHandler* errh);
