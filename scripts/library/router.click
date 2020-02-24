@@ -50,6 +50,7 @@ elementclass Router {
 	    -> [1]server_arpq;
 
 	server_class[2]
+	    -> CheckUDPHeader()
 	    -> [0] igmp; // Send udp data directly to igmp
 
 

@@ -24,6 +24,7 @@ elementclass Client {
     	-> [0]igmp
 
     IPClass[1] // Filter data
+        -> CheckUDPHeader()
         -> [1]igmp;
 
 	rt[1]

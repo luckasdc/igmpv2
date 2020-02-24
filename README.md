@@ -1,5 +1,6 @@
 ## IGMP - Telecom Project 2019-20
-#### Stan Schepers & Luckas Declerck
+#### Stan Schepers & Luckas Declerck (Zit 1)
+#### Luckas Declerck (Zit 2)
 
 This project implements IGMPv3 on the Click Modular Router. The solution is interoperable
 using the given reference platform. The implementation can executed by running ```sudo ./start_click.sh``` 
@@ -18,6 +19,13 @@ Clients can join/leave multicasts group by calling the following handlers: ``wri
 - client31: 10006
 
 The router will handle these state changes internally, output will be visible in the console or in the ```.pcap``` files.
+
+### Extra Implementation
+- A client can join multiple multicast addresses (tested in worst_case_scenario)
+- Checksums of the IGMP header, IP header and UDP header will be checked (tested in worst_case_scenario)
+- IGMP Packes with an unknown type (Query/Report) will be silently ignored
+- Leaving unjoined resources will be silently ignored
+- Handler for simulating a client that won't respond
 
 ### Scenarios
 Our project comes with 2 scenario's: the ```happy_day_scenario.sh``` end the ```worst_case_scenario.sh```. In the first 
