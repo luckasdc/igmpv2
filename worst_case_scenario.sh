@@ -15,7 +15,7 @@ sleep 6
 # client21 leaves group where he is not joined to
 echo "write client21/igmp.leave 224.4.4.4" | telnet localhost $client21
 sleep 5
-# EXPECTED: leave received. Wont give a problem.
+# EXPECTED: IGMPGroupMember sees that it is not subscribed, so no packet will be sent. Ignored silently.
 
 
 # client32 joins
