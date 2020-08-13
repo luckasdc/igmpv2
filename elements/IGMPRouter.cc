@@ -148,8 +148,6 @@ void IGMPRouter::received_igmp_query(int port, Packet* p) {
 
 WritablePacket* generate_leave_query(IGMPRouter* router, int interface, IPAddress multicast) {
     WritablePacket* packet = Packet::make(sizeof(click_ip) + sizeof(click_ether), nullptr, sizeof(MembershipQuery), 0);
-    // FIX
-    //packet->set_packet_type_anno(Packet::PacketType::MULTICAST);
     memset(packet->data(), 0, packet->length());
     packet->set_dst_ip_anno(multicast);
     MembershipQuery* membership_query = (MembershipQuery*) (packet->data());
@@ -277,8 +275,6 @@ WritablePacket* generate_general_query(IGMPRouter* router) {
     WritablePacket* packet = Packet::make(sizeof(click_ip) + sizeof(click_ether), nullptr, sizeof(MembershipQuery), 0);
     memset(packet->data(), 0, packet->length());
     packet->set_dst_ip_anno(defaults::all_systems_multicast_address);
-    // FIX
-   // packet->set_packet_type_anno(Packet::PacketType::MULTICAST);
     MembershipQuery* membership_query = (MembershipQuery*) (packet->data());
     membership_query->setup();
     membership_query->group_address = IPAddress(0);
