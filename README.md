@@ -9,6 +9,13 @@ the reference implementation.
 
 All the checksums of in- and outgoing IGMP packets will be checked, as well as the the checksums of the IP headers (as a seperate click element)
 
+### Fixed in V2 (Zit 2)
+- Packets weren't forwarded to client elements itself (arpq missing)
+- Packets were sent to wrong MAC address
+- IGMPGroupMembers (clients) didn't internally check if they are subscribed to a resource when they got a packet from it. (filter)
+- The TOS-byte is added to the packet header
+- Extra tests and scenarios were added
+
 ### Basic Usage
 Clients can join/leave multicasts group by calling the following handlers: ``write clientXX/igmp.join [multicast IP]`` and
   ``write clientXX/igmp.leave [multicast IP]``. These lines can be executed in the telnet panel
@@ -25,6 +32,7 @@ The router will handle these state changes internally, output will be visible in
 - Checksums of the IGMP header, IP header and UDP header will be checked (tested in worst_case_scenario)
 - IGMP Packages with an unknown type (other than Query/Report) will be silently ignored
 - Leaving unjoined resources will be silently ignored
+- Joining nonexisting resources will be handled correctly by the router
 - Handler for simulating a client that won't respond
 
 ### Scenarios
@@ -43,6 +51,7 @@ we created our own.
 - a Kill Client handler. This handler will can be called to simulate a dying client, which will result in 
 not answering to the general queries. Can be undone by calling it again. 
 ``write clientXX/igmp.kill``
+WARNING! This will of course not work if you are using a Reference client (has no kill implementation)
 
 ### Nice to know
 - All the variables that can be changed are found in ````defaults.hh````. 
@@ -54,4 +63,5 @@ renamed it to ```IPEncapDeluxe```.
 - The UDP data and IGMP messages use the same output, but the UDP data doesn't need an extra header. 
 To split the flow of these packets, they will be colored using color 1 or 0, and ````PaintSwitch```` 
 will distribute them accordingly.
+
 
