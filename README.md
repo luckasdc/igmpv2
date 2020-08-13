@@ -23,7 +23,7 @@ The router will handle these state changes internally, output will be visible in
 ### Extra Implementation
 - A client can join multiple multicast addresses (tested in worst_case_scenario)
 - Checksums of the IGMP header, IP header and UDP header will be checked (tested in worst_case_scenario)
-- IGMP Packes with an unknown type (Query/Report) will be silently ignored
+- IGMP Packages with an unknown type (other than Query/Report) will be silently ignored
 - Leaving unjoined resources will be silently ignored
 - Handler for simulating a client that won't respond
 
