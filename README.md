@@ -1,6 +1,6 @@
-## IGMP - Telecom Project 2019-20
-#### Stan Schepers & Luckas Declerck (Zit 1)
-#### Luckas Declerck (Zit 2)
+## IGMP - Telecom UA 2019-20
+#### Stan Schepers & Luckas Declerck (V1)
+#### Luckas Declerck (V2)
 
 This project implements IGMPv3 on the Click Modular Router. The solution is interoperable
 using the given reference platform. The implementation can executed by running ```sudo ./start_click.sh``` 
@@ -9,7 +9,7 @@ the reference implementation.
 
 All the checksums of in- and outgoing IGMP packets will be checked, as well as the the checksums of the IP headers (as a seperate click element)
 
-### Fixed in V2 (Zit 2)
+### Changelog V2
 - Packets weren't forwarded to client elements itself (arpq missing)
 - Packets were sent to wrong MAC address
 - IGMPGroupMembers (clients) didn't internally check if they are subscribed to a resource when they got a packet from it. (filter)
